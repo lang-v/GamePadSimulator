@@ -26,16 +26,19 @@ import com.game.gamepad.bluetooth.BlueToothTool
 import com.game.gamepad.bluetooth.BluetoothReceiver
 import com.game.gamepad.permission.EasyRequest
 import com.game.gamepad.widget.GameButton
+import com.game.gamepad.widget.Logger
 import com.inuker.bluetooth.library.utils.BluetoothUtils
 import com.smarx.notchlib.NotchScreenManager
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.lang.Exception
 import java.util.*
 import kotlin.collections.ArrayList
 
 class MainActivity : Activity(), View.OnClickListener {
     private val tag = "MainActivity"
-
     private var lastTime: Long = 0L
     private val permissionManager = EasyRequest()
     private var isModifying = false
@@ -43,7 +46,6 @@ class MainActivity : Activity(), View.OnClickListener {
     private val vibrator: Vibrator by lazy {
         getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
     }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -139,15 +141,21 @@ class MainActivity : Activity(), View.OnClickListener {
         //ManyBlue.blueSupport(this)
         //ManyBlue.DEBUG = true
         //ManyBlue.dealtListener()
-
         BlueToothTool.setListener(object : BlueToothTool.ConnectListen {
             override fun connected(connected: Boolean) {
-                Toast.makeText(
-                    this@MainActivity,
-                    if (connected) "连接成功"
-                    else
-                        "连接失败", Toast.LENGTH_SHORT
-                ).show()
+                GlobalScope.launch(Dispatchers.Main) {
+
+                    Toast.makeText(
+                        this@MainActivity,
+                        if (connected) "连接成功"
+                        else
+                            "连接失败", Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+
+            override fun toast(msg: String) {
+                Toast.makeText(this@MainActivity,msg,Toast.LENGTH_SHORT).show()
             }
         })
         BlueToothTool.enableBT()
@@ -187,7 +195,6 @@ class MainActivity : Activity(), View.OnClickListener {
         when (v) {
             //添加按钮
             addButton -> {
-                Log.e("SL","addButton")
                 createButton()
             }
             //锁定界面
@@ -205,7 +212,6 @@ class MainActivity : Activity(), View.OnClickListener {
                 }
             }
             connectDevice->{
-                Log.e("SL","click")
                 val index = deviceSpinner.selectedItemPosition
                 BlueToothTool.preConnect(index)
                 BlueToothTool.connect()

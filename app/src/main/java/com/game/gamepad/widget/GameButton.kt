@@ -108,7 +108,8 @@ class GameButton(
             keyState = !keyState
 //            ManyBlue.blueWriteData("$key:$keyState",ManyBlue.getConnTagAll())
             //if (BlueTooth.connected) BlueTooth.send(key,keyState)
-            if (BlueToothTool.isConnected())BlueToothTool.sendMsg("$key:$keyState")
+            //if (BlueToothTool.isConnected())
+            BlueToothTool.sendMsg("$key:$keyState")
         }
         return false
     }
