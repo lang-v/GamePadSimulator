@@ -7,6 +7,7 @@
     <string name="save_config">保存配置</string>
     <string-array name="key_array">
         <item>ctrl</item>
+        <item>space</item>
         <item>shift</item>
         <item>caps</item>
         <item>tab</item>
