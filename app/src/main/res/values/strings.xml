@@ -6,11 +6,30 @@
     <string name="modify_config">修改配置</string>
     <string name="save_config">保存配置</string>
     <string-array name="key_array">
+        <item>backspace</item>
         <item>ctrl</item>
         <item>space</item>
+        <item>enter</item>
         <item>shift</item>
         <item>caps</item>
         <item>tab</item>
+        <item>up</item>
+        <item>down</item>
+        <item>left</item>
+        <item>right</item>
+        <item>esc</item>
+        <item>f1</item>
+        <item>f2</item>
+        <item>f3</item>
+        <item>f4</item>
+        <item>f5</item>
+        <item>f6</item>
+        <item>f7</item>
+        <item>f8</item>
+        <item>f9</item>
+        <item>f10</item>
+        <item>f11</item>
+        <item>f12</item>
         <item>~</item>
         <item>0</item>
         <item>1</item>

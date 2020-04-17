@@ -59,7 +59,7 @@ object BlueToothTool {
         try {
             if (isConnected()) {
                 sendMsg("GamePadAndroid")
-                //receiveMsg()//和pc对接
+                receiveMsg()//和pc对接
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -109,8 +109,8 @@ object BlueToothTool {
                 return@Thread
             }
             try {
-                if (outputStream != null)
-                    outputStream = bluetoothSocket!!.outputStream
+                //if (outputStream == null)
+                outputStream = bluetoothSocket!!.outputStream
                 outputStream!!.write(msg.toByteArray(Charsets.UTF_8))
                 outputStream!!.flush()
                 connectListen.toast("消息发送成功")
@@ -151,7 +151,7 @@ object BlueToothTool {
 // successful connection or an exception
                 mmSocket!!.connect()
                 connectListen.connected(true)
-                //docking()
+                docking()
             } catch (e: IOException) {
                 try {
                     Log.i(TAG, "Trying fallback...")
@@ -162,7 +162,7 @@ object BlueToothTool {
                     ).invoke(mmDevice, 1) as BluetoothSocket
                     mmSocket!!.connect()
                     connectListen.connected(true)
-                    //docking()
+                    docking()
                     Log.i(TAG, "Connected")
                 } catch (e2: Exception) {
                     Log.e(TAG, "Couldn't establish Bluetooth connection!")

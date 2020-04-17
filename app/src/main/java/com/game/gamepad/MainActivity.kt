@@ -37,6 +37,11 @@ import java.lang.Exception
 import java.util.*
 import kotlin.collections.ArrayList
 
+//todo
+// 1.给按键配置做一个本地存储
+// 2.控件大小可控，
+// 3.制作摇杆控件
+// 4.等待修复偶尔卡顿的问题
 class MainActivity : Activity(), View.OnClickListener {
     private val tag = "MainActivity"
     private var lastTime: Long = 0L
@@ -155,7 +160,7 @@ class MainActivity : Activity(), View.OnClickListener {
             }
 
             override fun toast(msg: String) {
-                Toast.makeText(this@MainActivity,msg,Toast.LENGTH_SHORT).show()
+                //Toast.makeText(this@MainActivity,msg,Toast.LENGTH_SHORT).show()
             }
         })
         BlueToothTool.enableBT()
