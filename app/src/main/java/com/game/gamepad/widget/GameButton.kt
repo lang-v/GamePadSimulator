@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
-import com.game.gamepad.bluetooth.BlueTooth
 import com.game.gamepad.R
 import com.game.gamepad.bluetooth.BlueToothTool
 
@@ -16,16 +15,16 @@ import com.game.gamepad.bluetooth.BlueToothTool
 
 
 class GameButton(
-    private val context: Context,
+    context: Context,
     private val viewGroup: ViewGroup,
     vibrator: Vibrator,
     key: String = "",
     x: Float,
-    y: Float
+    y: Float,
+    private var radius: Int
 ) : View.OnClickListener, View.OnTouchListener {
     private val TAG = "GameButton"
     private var key = ""
-    private var keyState = false//true 对应按下，false 对应抬起
     private var MOVESTATE = false//移动
     private var SHOWCLOSE = false//显示关闭按钮
     //这里的attachtoroot是真的坑，直接添加到根视图下了
@@ -47,6 +46,12 @@ class GameButton(
         close = layout.findViewById(R.id.close)
         setText(key)
         //button.setOnClickListener(this)
+        button.width = radius * 2
+        button.height = radius * 2
+        button.layoutParams.apply {
+            height = radius*2
+            width = radius*2
+        }
         close.setOnClickListener(this)
         button.setOnTouchListener(this)
     }
@@ -65,6 +70,10 @@ class GameButton(
         }
     }
 
+    fun destory(){
+        viewGroup.removeView(layout)
+    }
+
     fun setText(text: String) {
         key = text
         button.text = key
@@ -79,38 +88,36 @@ class GameButton(
         }
     }
 
-//    override fun onLongClick(v: View?): Boolean {
-//        MOVESTATE = !MOVESTATE
-//        Log.e("SL", "movestate:$MOVESTATE")
-//        setShowClose(MOVESTATE)
-//        //震动0.3s
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//            vibrator.vibrate(VibrationEffect.createOneShot(300, 1))
-//        } else {
-//            val patter = longArrayOf(0, 300)
-//            vibrator.vibrate(patter, 1)
-//            Thread(Runnable {
-//                Thread.sleep(300)
-//                this.vibrator.cancel()
-//            }).run()
-//        }
-//        return true
-//    }
-
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
         if (event == null || v == null) return false
         if (MOVESTATE) {
-            this.layout.x = event.rawX-layout.width/2+close.width
-            this.layout.y = event.rawY-layout.height/2
+            this.layout.x = event.rawX - layout.width / 2 + close.width
+            this.layout.y = event.rawY - layout.height / 2
             return true
         }
-        if (v.id == R.id.btn && (event.action == MotionEvent.ACTION_DOWN || event.action == MotionEvent.ACTION_UP)){
-            keyState = !keyState
+        if (v.id == R.id.btn && event.action != MotionEvent.ACTION_MOVE) {
 //            ManyBlue.blueWriteData("$key:$keyState",ManyBlue.getConnTagAll())
             //if (BlueTooth.connected) BlueTooth.send(key,keyState)
             //if (BlueToothTool.isConnected())
-            BlueToothTool.sendMsg("$key:$keyState")
+            if (BlueToothTool.isConnected())
+                BlueToothTool.sendMsg(
+                    "$key:${when (event.action) {
+                        MotionEvent.ACTION_DOWN -> {
+                            true
+                        };MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                            false
+                        };else -> {
+                            false
+                        }
+                    }}"
+                )
         }
         return false
+    }
+
+    fun getBean():String{
+        return """
+            {"height":${button.height},"key":"$key","width":${button.width},"x":${layout.x},"y":${layout.y},"r":${radius}}
+        """.trimIndent()
     }
 }

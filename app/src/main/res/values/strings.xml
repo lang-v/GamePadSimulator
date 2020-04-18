@@ -5,6 +5,7 @@
     <string name="add_button">添加按钮</string>
     <string name="modify_config">修改配置</string>
     <string name="save_config">保存配置</string>
+    <string name="tips">提示：数值只与屏幕像素有关</string>
     <string-array name="key_array">
         <item>backspace</item>
         <item>ctrl</item>

@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
     android:background="@android:color/transparent"
-    android:orientation="horizontal"
-    android:layout_height="wrap_content">
+    android:orientation="horizontal">
 
     <Button
         android:id="@+id/btn"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:background="@drawable/ring_button"
         android:gravity="center"
-        android:textStyle="bold"
-        android:layout_width="50dp"
-        android:layout_height="50dp"/>
+        android:textStyle="bold" />
 
     <Button
         android:id="@+id/close"
-        android:visibility="invisible"
-        android:layout_alignEnd="@id/btn"
-        android:background="@drawable/ic_close_black"
         android:layout_width="25dp"
-        android:layout_height="25dp"/>
+        android:layout_height="25dp"
+        android:background="@drawable/ic_close_black"
+        android:visibility="invisible" />
 
 </LinearLayout>
+

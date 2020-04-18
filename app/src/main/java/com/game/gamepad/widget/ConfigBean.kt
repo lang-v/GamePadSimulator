@@ -12,5 +12,6 @@ data class Button(
     val key: String,
     val width: Int,
     val x: Float,
-    val y: Float
+    val y: Float,
+    val r: Int
 )

@@ -1,222 +1,303 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:clipChildren="false"
     android:clipToPadding="false"
-    android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <com.daimajia.swipe.SwipeLayout
-        android:id="@+id/homeTop"
+    <RelativeLayout
+        android:id="@+id/home"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_gravity="center">
+
+        <View
+            android:id="@+id/setting"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_alignParentEnd="true"
+            android:background="@drawable/ic_settings_black" />
+
+    </RelativeLayout>
+
+
+    <RelativeLayout
+        android:id="@+id/settingLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="visible">
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:background="@android:color/white"
             android:orientation="vertical"
-            android:paddingStart="20dp"
-            android:paddingTop="10dp"
-            android:paddingEnd="20dp"
-            android:paddingBottom="10dp">
+            android:padding="10dp">
 
             <TextView
                 android:id="@+id/currentConfig"
-                android:layout_width="match_parent"
-                android:layout_height="20dp"
-                android:text="当前配置：默认"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:text="默认"
                 android:textSize="18sp" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginTop="10dp">
+            <com.example.elasticviewlibrary.ElasticView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-                <LinearLayout
-                    android:layout_width="80dp"
-                    android:layout_height="100dp"
-                    android:layout_marginEnd="10dp"
-                    android:orientation="vertical">
+                <ScrollView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:overScrollMode="never"
+                    android:scrollbars="none">
 
-                    <ImageView
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
-                        android:src="@mipmap/ic_launcher" />
-
-                    <TextView
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="20dp"
-                        android:text="@string/choose_config"
-                        android:textAlignment="center" />
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
 
-                </LinearLayout>
+                        <LinearLayout
+                            android:id="@+id/chooseConfig"
+                            android:layout_width="80dp"
+                            android:layout_height="100dp"
+                            android:layout_marginEnd="10dp"
+                            android:orientation="vertical">
+
+                            <ImageView
+                                android:layout_width="80dp"
+                                android:layout_height="80dp"
+                                android:src="@mipmap/ic_launcher" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="20dp"
+                                android:text="@string/choose_config"
+                                android:textAlignment="center" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/addConfig"
+                            android:layout_width="80dp"
+                            android:layout_height="100dp"
+                            android:layout_marginEnd="10dp"
+                            android:orientation="vertical">
+
+                            <ImageView
+                                android:layout_width="80dp"
+                                android:layout_height="80dp"
+                                android:src="@mipmap/ic_launcher" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="20dp"
+                                android:text="@string/add_config"
+                                android:textAlignment="center" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/addButton"
+                            android:layout_width="80dp"
+                            android:layout_height="100dp"
+                            android:layout_marginEnd="10dp"
+                            android:orientation="vertical">
+
+                            <ImageView
+                                android:layout_width="80dp"
+                                android:layout_height="80dp"
+                                android:src="@mipmap/ic_launcher" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="20dp"
+                                android:text="@string/add_button"
+                                android:textAlignment="center" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/modifyConfig"
+                            android:layout_width="80dp"
+                            android:layout_height="100dp"
+                            android:layout_marginEnd="10dp"
+                            android:orientation="vertical">
+
+                            <ImageView
+                                android:layout_width="80dp"
+                                android:layout_height="80dp"
+                                android:src="@mipmap/ic_launcher" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="20dp"
+                                android:text="@string/modify_config"
+                                android:textAlignment="center" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/saveConfig"
+                            android:layout_width="80dp"
+                            android:layout_height="100dp"
+                            android:layout_marginEnd="10dp"
+                            android:orientation="vertical">
+
+                            <ImageView
+                                android:layout_width="80dp"
+                                android:layout_height="80dp"
+                                android:src="@mipmap/ic_launcher" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="20dp"
+                                android:text="@string/save_config"
+                                android:textAlignment="center" />
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </ScrollView>
+
+            </com.example.elasticviewlibrary.ElasticView>
+
+
+        </LinearLayout>
+
+        <com.example.elasticviewlibrary.ElasticView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:background="@android:color/white"
+            android:gravity="end"
+            android:orientation="vertical">
+
+            <ScrollView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent">
 
                 <LinearLayout
-                    android:layout_width="80dp"
-                    android:layout_height="100dp"
-                    android:layout_marginEnd="10dp"
-                    android:orientation="vertical">
-
-                    <ImageView
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
-                        android:src="@mipmap/ic_launcher" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="20dp"
-                        android:text="@string/add_config"
-                        android:textAlignment="center" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/addButton"
-                    android:layout_width="80dp"
-                    android:layout_height="100dp"
-                    android:layout_marginEnd="10dp"
-                    android:orientation="vertical">
-
-                    <ImageView
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
-                        android:src="@mipmap/ic_launcher" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="20dp"
-                        android:text="@string/add_button"
-                        android:textAlignment="center" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/modifyConfig"
-                    android:layout_width="80dp"
-                    android:layout_height="100dp"
-                    android:layout_marginEnd="10dp"
-                    android:orientation="vertical">
-
-                    <ImageView
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
-                        android:src="@mipmap/ic_launcher" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="20dp"
-                        android:text="@string/modify_config"
-                        android:textAlignment="center" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="80dp"
-                    android:layout_height="100dp"
-                    android:layout_marginEnd="10dp"
-                    android:orientation="vertical">
-
-                    <ImageView
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
-                        android:src="@mipmap/ic_launcher" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="20dp"
-                        android:text="@string/save_config"
-                        android:textAlignment="center" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_marginEnd="10dp"
                     android:orientation="vertical"
-                    android:layout_width="150dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content">
 
-                    <androidx.appcompat.widget.AppCompatSpinner
-                        android:id="@+id/deviceSpinner"
+
+                    <LinearLayout
                         android:layout_width="150dp"
-                        android:layout_height="50dp" />
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
 
-                    <Button
-                        android:id="@+id/connectDevice"
-                        android:text="连接"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:orientation="horizontal">
 
+                            <Button
+                                android:id="@+id/reFresh"
+                                android:layout_width="85dp"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="start"
+                                android:text="刷新" />
 
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp">
+                            <View
+                                android:id="@+id/connectState"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_gravity="center"
+                                android:layout_marginStart="35dp"
+                                android:background="@drawable/connection_state_selector" />
+                        </LinearLayout>
+
+                        <androidx.appcompat.widget.AppCompatSpinner
+                            android:id="@+id/deviceSpinner"
+                            android:layout_width="150dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp" />
+
+                        <LinearLayout
+                            android:layout_width="150dp"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <Button
+                                android:id="@+id/connectDevice"
+                                android:layout_width="75dp"
+                                android:layout_height="wrap_content"
+                                android:text="连接" />
+
+                            <Button
+                                android:id="@+id/disconnectDevice"
+                                android:layout_width="75dp"
+                                android:layout_height="wrap_content"
+                                android:enabled="false"
+                                android:text="断开" />
+                        </LinearLayout>
+
+                    </LinearLayout>
 
                     <LinearLayout
                         android:id="@+id/key"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
+                        android:layout_marginTop="10dp"
                         android:orientation="horizontal">
 
                         <TextView
                             android:id="@+id/keyText"
-                            android:layout_width="25dp"
+                            android:layout_width="30dp"
                             android:layout_height="wrap_content"
                             android:text="值：" />
 
                         <androidx.appcompat.widget.AppCompatSpinner
                             android:id="@+id/keyValue"
-                            android:layout_width="150dp"
+                            android:layout_width="100dp"
                             android:layout_height="wrap_content"
                             android:entries="@array/key_array" />
                     </LinearLayout>
 
                     <EditText
                         android:id="@+id/x"
-                        android:layout_width="80dp"
+                        android:layout_width="150dp"
                         android:layout_height="wrap_content"
-                        android:layout_below="@id/key"
                         android:digits="1234567890."
-                        android:hint="X:" />
+                        android:hint="X:500" />
 
                     <EditText
                         android:id="@+id/y"
-                        android:layout_width="80dp"
+                        android:layout_width="150dp"
                         android:layout_height="wrap_content"
-                        android:layout_below="@id/x"
                         android:digits="1234567890."
-                        android:hint="Y:" />
+                        android:hint="Y:500" />
 
-                </RelativeLayout>
+                    <EditText
+                        android:id="@+id/radius"
+                        android:layout_width="150dp"
+                        android:layout_height="wrap_content"
+                        android:digits="1234567890"
+                        android:hint="半径:100" />
 
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="150dp"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:lines="2"
+                        android:text="@string/tips" />
 
-        </LinearLayout>
+                    <Button
+                        android:id="@+id/back"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="返回" />
+                </LinearLayout>
+            </ScrollView>
 
-        <RelativeLayout
-            android:id="@+id/home"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:background="@drawable/main_shape">
+        </com.example.elasticviewlibrary.ElasticView>
 
-            <View
-                android:id="@+id/lock"
-                android:layout_width="25dp"
-                android:layout_height="25dp"
-                android:layout_alignParentTop="true"
-                android:layout_alignParentEnd="true"
-                android:layout_marginTop="20dp"
-                android:layout_marginEnd="20dp"
-                android:background="@drawable/unlock_lock" />
-
-        </RelativeLayout>
-
-    </com.daimajia.swipe.SwipeLayout>
-
-</LinearLayout>
+    </RelativeLayout>
+</RelativeLayout>
