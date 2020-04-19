@@ -15,20 +15,20 @@ object ConfigFactory{
         sharedPreferences = context.getSharedPreferences("config",Context.MODE_PRIVATE)
     }
 
-    fun loadConfig(vibrator: Vibrator, viewGroup: ViewGroup, configName:String="default"):ArrayList<GameButton>{
+    fun loadConfig(listener: GameButton.RemoveListener,viewGroup: ViewGroup, configName:String="default"):ArrayList<GameButton>{
         val json = get(configName) ?: return ArrayList()
-        Log.e("SL","loadJson : $json")
+//        Log.e("SL","loadJson : $json")
         val gson = Gson()
         val configBean = gson.fromJson<ConfigBean>(json,ConfigBean::class.java)
         val buttons = ArrayList<GameButton>()
         configBean.buttons.forEach { b->
-            buttons.add(GameButton(context,viewGroup,vibrator,b.key,b.x,b.y,b.r))
+            buttons.add(GameButton(context,viewGroup,listener,b.key,b.x,b.y,b.r))
         }
         return buttons
     }
 
     fun save(configName:String = "default",json:String){
-        Log.e("SL","saveJson : $json")
+//        Log.e("SL","saveJson : $json")
         val editor = sharedPreferences.edit()
         editor.putString(configName,json)
         editor.apply()

@@ -13,6 +13,12 @@
         android:layout_height="match_parent"
         android:layout_gravity="center">
 
+        <ImageView
+            android:src="@drawable/bg"
+            android:scaleType="centerCrop"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
         <View
             android:id="@+id/setting"
             android:layout_width="30dp"
@@ -177,6 +183,8 @@
             android:orientation="vertical">
 
             <ScrollView
+                android:scrollbars="none"
+                android:overScrollMode="never"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent">
 

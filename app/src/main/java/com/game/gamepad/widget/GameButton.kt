@@ -2,6 +2,7 @@ package com.game.gamepad.widget
 
 import android.content.Context
 import android.os.Vibrator
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -17,7 +18,7 @@ import com.game.gamepad.bluetooth.BlueToothTool
 class GameButton(
     context: Context,
     private val viewGroup: ViewGroup,
-    vibrator: Vibrator,
+    listener: RemoveListener,
     key: String = "",
     x: Float,
     y: Float,
@@ -26,7 +27,7 @@ class GameButton(
     private val TAG = "GameButton"
     private var key = ""
     private var MOVESTATE = false//移动
-    private var SHOWCLOSE = false//显示关闭按钮
+    private lateinit var listener: RemoveListener
     //这里的attachtoroot是真的坑，直接添加到根视图下了
     private var layout: LinearLayout = LayoutInflater.from(context).inflate(
         R.layout.game_button_layout_ring,
@@ -35,25 +36,26 @@ class GameButton(
     ) as LinearLayout
     private var button: Button
     private var close: Button
-    //震动
-    private var vibrator = vibrator
 
     init {
         layout.x = x
         layout.y = y
+        this.listener = listener
         viewGroup.addView(layout)
         button = layout.findViewById(R.id.btn)
         close = layout.findViewById(R.id.close)
         setText(key)
         //button.setOnClickListener(this)
-        button.width = radius * 2
-        button.height = radius * 2
         button.layoutParams.apply {
             height = radius*2
             width = radius*2
         }
         close.setOnClickListener(this)
         button.setOnTouchListener(this)
+    }
+
+    fun getLayout():LinearLayout{
+        return layout
     }
 
     /**
@@ -70,8 +72,10 @@ class GameButton(
         }
     }
 
-    fun destory(){
+    fun destroy(remove:Boolean){
         viewGroup.removeView(layout)
+        if (remove)
+            listener.remove(this)
     }
 
     fun setText(text: String) {
@@ -83,7 +87,7 @@ class GameButton(
         if (v == null) return
         when (v.id) {
             R.id.close -> {
-                viewGroup.removeView(layout)//删除这个按钮
+                destroy(true)//删除这个按钮
             }
         }
     }
@@ -91,14 +95,15 @@ class GameButton(
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
         if (event == null || v == null) return false
         if (MOVESTATE) {
-            this.layout.x = event.rawX - layout.width / 2 + close.width
-            this.layout.y = event.rawY - layout.height / 2
+            this.layout.x = event.rawX - button.width / 2 + close.width
+            this.layout.y = event.rawY - button.height / 2
             return true
         }
         if (v.id == R.id.btn && event.action != MotionEvent.ACTION_MOVE) {
 //            ManyBlue.blueWriteData("$key:$keyState",ManyBlue.getConnTagAll())
             //if (BlueTooth.connected) BlueTooth.send(key,keyState)
             //if (BlueToothTool.isConnected())
+            //Log.e("SL","action:${event.action}")
             if (BlueToothTool.isConnected())
                 BlueToothTool.sendMsg(
                     "$key:${when (event.action) {
@@ -112,12 +117,16 @@ class GameButton(
                     }}"
                 )
         }
-        return false
+        return true
     }
 
     fun getBean():String{
         return """
             {"height":${button.height},"key":"$key","width":${button.width},"x":${layout.x},"y":${layout.y},"r":${radius}}
         """.trimIndent()
+    }
+
+    interface RemoveListener{
+        fun remove(button:GameButton)
     }
 }

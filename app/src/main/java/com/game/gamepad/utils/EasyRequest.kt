@@ -1,4 +1,4 @@
-package com.game.gamepad.permission
+package com.game.gamepad.utils
 import android.annotation.TargetApi
 import android.app.Activity
 import android.content.pm.PackageManager

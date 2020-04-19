@@ -17,14 +17,12 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.game.gamepad.bluetooth.BlueToothTool
-import com.game.gamepad.permission.EasyRequest
+import com.game.gamepad.utils.EasyRequest
+import com.game.gamepad.utils.ToastUtil
 import com.game.gamepad.widget.ConfigFactory
 import com.game.gamepad.widget.GameButton
 import com.smarx.notchlib.NotchScreenManager
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import java.lang.Exception
 import kotlin.collections.ArrayList
 
@@ -69,6 +67,12 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
             super.handleMessage(msg)
         }
     }
+    private val removeListener=object :GameButton.RemoveListener{
+        override fun remove(button: GameButton) {
+            //home.removeView(button.getLayou())
+            gameButtonList.remove(button)
+        }
+    }
 
     private val bluetoothStateChangedReceive = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -88,7 +92,7 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
                     }
                 }
                 BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
-
+                    ToastUtil.show("扫描完毕")
                 }
                 BluetoothDevice.ACTION_FOUND -> {
                     val device: BluetoothDevice =
@@ -102,9 +106,7 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
                     }
                 }
             }
-            if (action.equals(BluetoothDevice.ACTION_ACL_CONNECTED)) {
-                //连接上了
-            } else if (action.equals(BluetoothDevice.ACTION_ACL_DISCONNECTED)) {
+            if (action.equals(BluetoothDevice.ACTION_ACL_DISCONNECTED)) {
                 //蓝牙连接被切断
                 val device: BluetoothDevice =
                     intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
@@ -144,6 +146,8 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
         registerReceiver(bluetoothStateChangedReceive, filter)
     }
 
+
+
     private fun unregisterBroadcast() {
         unregisterReceiver(bluetoothStateChangedReceive)
     }
@@ -181,6 +185,8 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
         //deviceSpinner.adapter = deviceAdapter
         //初始化蓝牙
         BlueToothTool.init()
+        //初始化toast工具
+        ToastUtil.init(this)
         if (BlueToothTool.isEnable()){
             val devices = BlueToothTool.getDevices()
             devices.forEach { d->
@@ -193,14 +199,23 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
         deviceSpinner.adapter = deviceAdapter
         deviceAdapter.notifyDataSetChanged()
         //val adapter = ArrayAdapter<String>(this, R.layout.simple_spinner_item, array)
+        //连接和断开连接
         connectDevice.setOnClickListener(this)
+        disconnectDevice.setOnClickListener(this)
+        //添加按钮
         addButton.setOnClickListener(this)
+        //选择配置
         chooseConfig.setOnClickListener(this)
+        //保存配置
         saveConfig.setOnClickListener(this)
+        //返回到主页面
         back.setOnClickListener(this)
+        //设置页面
         setting.setOnClickListener(this)
+        //修改配置
         modifyConfig.setOnClickListener(this)
-
+        //刷新设备
+        reFresh.setOnClickListener(this)
         //自动选择配置
         //chooseConfig.callOnClick()
     }
@@ -224,12 +239,20 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
         var yValue = 500f
         var radiusValue = 100
         try {
-            xValue = x.text.toString().toFloat()
-            yValue = y.text.toString().toFloat()
-            radiusValue = radius.text.toString().toInt()
+            val xText = x.text.toString()
+            val yText = y.text.toString()
+            val rText = radius.text.toString()
+            if (xText!="")
+                xValue = xText.toFloat()
+            if (yText!="")
+                yValue =yText.toFloat()
+            if (rText!="")
+                radiusValue = rText.toInt()
         } catch (e: Exception) {
+            Toast.makeText(this,"参数有误",Toast.LENGTH_SHORT).show()
+            return
         }
-        val gameButton = GameButton(home.context, home, vibrator, key, xValue, yValue, radiusValue)
+        val gameButton = GameButton(home.context, home,removeListener, key, xValue, yValue, radiusValue)
         gameButtonList.add(gameButton)
     }
 
@@ -261,11 +284,11 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
             //加载设置
             chooseConfig -> {
                 Thread {
-                    gameButtonList.forEach { b->
-                        b.destory()
+                    for (index in gameButtonList.indices){
+                        gameButtonList[index].destroy(false)
                     }
                     gameButtonList.clear()
-                    val list = ConfigFactory.loadConfig(vibrator, home)
+                    val list = ConfigFactory.loadConfig(removeListener,home)
                     for (gameButton in list) {
                         gameButtonList.add(gameButton)
                     }
@@ -361,6 +384,7 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
     override fun connected(connected: Boolean) {
         runOnUiThread {
             if (connected) {
+                vibrator.vibrate(300)
                 connectState.isActivated = true
                 Toast.makeText(this, "连接成功", Toast.LENGTH_SHORT).show()
                 connectDevice.isEnabled = false
@@ -371,12 +395,6 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
                 connectDevice.isEnabled = true
                 disconnectDevice.isEnabled = false
             }
-        }
-    }
-
-    override fun toast(msg: String) {
-        GlobalScope.launch (Dispatchers.Main){
-            Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
         }
     }
 }

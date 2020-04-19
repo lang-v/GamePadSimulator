@@ -3,13 +3,12 @@ package com.game.gamepad.bluetooth
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
-import android.bluetooth.le.ScanCallback
 import android.util.Log
+import com.game.gamepad.utils.ToastUtil
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.*
-import kotlin.collections.ArrayList
 
 
 object BlueToothTool {
@@ -61,8 +60,7 @@ object BlueToothTool {
     }
 
     fun connect() {
-        if (connectThread != null) return
-        Log.e("SL","run")
+//        Log.e("SL","run")
         connectThread = ConnectThread(getDevices()[connectDeviceIndex], bluetoothSocket)
         connectThread!!.start()
     }
@@ -76,6 +74,7 @@ object BlueToothTool {
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            Log.e("SL","对接失败")
             blueToothtListen.connected(false)
         }
     }
@@ -101,9 +100,12 @@ object BlueToothTool {
                         inputStream = bluetoothSocket!!.inputStream
                     val byteArray = ByteArray(200)
                     inputStream!!.read(byteArray, 0, byteArray.size)
-                    val msg = byteArray.toString(Charsets.UTF_8)
+                    val msg = byteArray.toString(Charsets.UTF_8).substring(0,9)
+
+                    Log.e("SL","receiveMsg 对接 $msg ${msg == receiveCommand}")
                     blueToothtListen.connected(msg == receiveCommand)
                 } catch (e: Exception) {
+                    Log.e("SL","receiveMsg 对接失败")
                     blueToothtListen.connected(false)
                 }
             }
@@ -116,7 +118,7 @@ object BlueToothTool {
     fun sendMsg(msg: String) {
         Thread {
             if (bluetoothSocket == null || !bluetoothSocket!!.isConnected) {
-                blueToothtListen.toast("未连接")
+                ToastUtil.show("未连接")
                 return@Thread
             }
             try {
@@ -126,7 +128,7 @@ object BlueToothTool {
                 //blueToothtListen.toast("消息发送成功")
             } catch (e: Exception) {
                 e.printStackTrace()
-                blueToothtListen.toast("消息发送失败")
+                ToastUtil.show("消息发送失败")
                 //connectListen.connected(false)
             }
         }.run()
@@ -134,20 +136,26 @@ object BlueToothTool {
 
     fun disConnect() {
         if (bluetoothSocket != null) {
-            if (outputStream != null)
+            if (outputStream != null) {
                 outputStream!!.close()
-            if (inputStream != null)
+                outputStream = null;
+            }
+            if (inputStream != null) {
                 inputStream!!.close()
+                inputStream=null
+            }
             bluetoothSocket!!.close()
-            if (connectThread != null)
+            bluetoothSocket = null
+            if (connectThread != null) {
                 connectThread!!.cancel()
+                connectThread = null
+            }
         }
         blueToothtListen.connected(false)
     }
 
     interface BluetoothListen {
         fun connected(connected: Boolean)
-        fun toast(msg:String)
     }
 
     private class ConnectThread(
@@ -161,7 +169,7 @@ object BlueToothTool {
             try { // This is a blocking call and will only return on a
 // successful connection or an exception
                 mmSocket!!.connect()
-                blueToothtListen.connected(true)
+                //blueToothtListen.connected(true)
                 docking()
             } catch (e: IOException) {
                 try {
@@ -172,7 +180,7 @@ object BlueToothTool {
                         )
                     ).invoke(mmDevice, 1) as BluetoothSocket
                     mmSocket!!.connect()
-                    blueToothtListen.connected(true)
+                    //blueToothtListen.connected(true)
                     docking()
                     Log.i(TAG, "Connected")
                 } catch (e2: Exception) {
@@ -186,6 +194,7 @@ object BlueToothTool {
                             e3
                         )
                     }
+                    Log.e("SL","连接失败")
                     blueToothtListen.connected(false)
                     return
                 }
