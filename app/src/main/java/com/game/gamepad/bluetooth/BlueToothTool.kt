@@ -5,6 +5,9 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.util.Log
 import com.game.gamepad.utils.ToastUtil
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -89,6 +92,20 @@ object BlueToothTool {
     }
 
     /**
+     * 这个函数的作用是为了避免连接长时间没有消息引起卡顿
+     */
+    private var lastTime = 0L
+    fun positive(){
+        GlobalScope.launch{
+            while (isConnected()) {
+                if (System.currentTimeMillis()- lastTime > 500)
+                    sendMsg("_")
+                delay(500)
+            }
+        }
+    }
+
+    /**
      * Charset is UTF_8
      */
     private fun receiveMsg() {
@@ -101,7 +118,6 @@ object BlueToothTool {
                     val byteArray = ByteArray(200)
                     inputStream!!.read(byteArray, 0, byteArray.size)
                     val msg = byteArray.toString(Charsets.UTF_8).substring(0,9)
-
                     Log.e("SL","receiveMsg 对接 $msg ${msg == receiveCommand}")
                     blueToothtListen.connected(msg == receiveCommand)
                 } catch (e: Exception) {
@@ -115,11 +131,12 @@ object BlueToothTool {
     /**
      * msg charset is UTF_8
      */
+    @Synchronized
     fun sendMsg(msg: String) {
-        Thread {
+            lastTime = System.currentTimeMillis()
             if (bluetoothSocket == null || !bluetoothSocket!!.isConnected) {
                 ToastUtil.show("未连接")
-                return@Thread
+                return
             }
             try {
                 outputStream = bluetoothSocket!!.outputStream
@@ -129,9 +146,9 @@ object BlueToothTool {
             } catch (e: Exception) {
                 e.printStackTrace()
                 ToastUtil.show("消息发送失败")
+                disConnect()
                 //connectListen.connected(false)
             }
-        }.run()
     }
 
     fun disConnect() {

@@ -23,6 +23,7 @@ import com.game.gamepad.widget.ConfigFactory
 import com.game.gamepad.widget.GameButton
 import com.smarx.notchlib.NotchScreenManager
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.GlobalScope
 import java.lang.Exception
 import kotlin.collections.ArrayList
 
@@ -67,7 +68,7 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
             super.handleMessage(msg)
         }
     }
-    private val removeListener=object :GameButton.RemoveListener{
+    private val removeListener = object : GameButton.RemoveListener {
         override fun remove(button: GameButton) {
             //home.removeView(button.getLayou())
             gameButtonList.remove(button)
@@ -147,7 +148,6 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
     }
 
 
-
     private fun unregisterBroadcast() {
         unregisterReceiver(bluetoothStateChangedReceive)
     }
@@ -187,9 +187,9 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
         BlueToothTool.init()
         //初始化toast工具
         ToastUtil.init(this)
-        if (BlueToothTool.isEnable()){
+        if (BlueToothTool.isEnable()) {
             val devices = BlueToothTool.getDevices()
-            devices.forEach { d->
+            devices.forEach { d ->
                 deviceList.add(d)
                 deviceNameList.add(d.name)
             }
@@ -242,17 +242,18 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
             val xText = x.text.toString()
             val yText = y.text.toString()
             val rText = radius.text.toString()
-            if (xText!="")
+            if (xText != "")
                 xValue = xText.toFloat()
-            if (yText!="")
-                yValue =yText.toFloat()
-            if (rText!="")
+            if (yText != "")
+                yValue = yText.toFloat()
+            if (rText != "")
                 radiusValue = rText.toInt()
         } catch (e: Exception) {
-            Toast.makeText(this,"参数有误",Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "参数有误", Toast.LENGTH_SHORT).show()
             return
         }
-        val gameButton = GameButton(home.context, home,removeListener, key, xValue, yValue, radiusValue)
+        val gameButton =
+            GameButton(home.context, home, removeListener, key, xValue, yValue, radiusValue)
         gameButtonList.add(gameButton)
     }
 
@@ -284,11 +285,11 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
             //加载设置
             chooseConfig -> {
                 Thread {
-                    for (index in gameButtonList.indices){
+                    for (index in gameButtonList.indices) {
                         gameButtonList[index].destroy(false)
                     }
                     gameButtonList.clear()
-                    val list = ConfigFactory.loadConfig(removeListener,home)
+                    val list = ConfigFactory.loadConfig(removeListener, home)
                     for (gameButton in list) {
                         gameButtonList.add(gameButton)
                     }
@@ -298,10 +299,10 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
             saveConfig -> {
                 Thread {
                     var json = ""
-                    for ((index,gameButton) in gameButtonList.withIndex()) {
+                    for ((index, gameButton) in gameButtonList.withIndex()) {
                         json += gameButton.getBean()
-                        if(index != gameButtonList.size-1)
-                            json+=","
+                        if (index != gameButtonList.size - 1)
+                            json += ","
                     }
                     ConfigFactory.save(
                         json =
@@ -312,7 +313,7 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
             //连接设备
             connectDevice -> {
                 val index = deviceSpinner.selectedItemPosition
-                if (index ==-1)return
+                if (index == -1) return
                 BlueToothTool.preConnect(index)
                 BlueToothTool.connect()
             }
@@ -389,6 +390,10 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
                 Toast.makeText(this, "连接成功", Toast.LENGTH_SHORT).show()
                 connectDevice.isEnabled = false
                 disconnectDevice.isEnabled = true
+                //开启蓝牙活跃
+                Thread {
+                    BlueToothTool.positive()
+                }.run()
             } else {
                 connectState.isActivated = false
                 Toast.makeText(this, "连接失败", Toast.LENGTH_SHORT).show()
