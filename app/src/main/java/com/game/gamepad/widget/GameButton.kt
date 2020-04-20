@@ -37,24 +37,27 @@ class GameButton(
         viewGroup,
         false
     ) as LinearLayout
-    private var button: Button
-    private var close: Button
+    private lateinit var button: Button
+    private lateinit var close: Button
 
     init {
         layout.x = x
         layout.y = y
         this.listener = listener
-        viewGroup.addView(layout)
-        button = layout.findViewById(R.id.btn)
-        close = layout.findViewById(R.id.close)
-        setText(key)
-        //button.setOnClickListener(this)
-        button.layoutParams.apply {
-            height = radius*2
-            width = radius*2
+        GlobalScope.launch (Dispatchers.Main){
+            viewGroup.addView(layout)
+            button = layout.findViewById(R.id.btn)
+            close = layout.findViewById(R.id.close)
+            setText(key)
+            //button.setOnClickListener(this)
+            button.layoutParams.apply {
+                height = radius*2
+                width = radius*2
+            }
+            close.setOnClickListener(this@GameButton)
+            button.setOnTouchListener(this@GameButton)
         }
-        close.setOnClickListener(this)
-        button.setOnTouchListener(this)
+
     }
 
     fun getLayout():LinearLayout{
@@ -76,7 +79,9 @@ class GameButton(
     }
 
     fun destroy(remove:Boolean){
-        viewGroup.removeView(layout)
+        GlobalScope.launch (Dispatchers.Main){
+            viewGroup.removeView(layout)
+        }
         if (remove)
             listener.remove(this)
     }

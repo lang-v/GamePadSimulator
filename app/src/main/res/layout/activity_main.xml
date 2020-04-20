@@ -3,21 +3,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:clipChildren="false"
-    android:clipToPadding="false"
     tools:context=".MainActivity">
 
     <RelativeLayout
         android:id="@+id/home"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="center">
+        android:layout_height="match_parent">
 
         <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:src="@drawable/bg"
             android:scaleType="centerCrop"
-            android:src="@drawable/bg" />
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
 
         <View
             android:id="@+id/connectionState"
@@ -33,7 +30,7 @@
             android:layout_height="30dp"
             android:layout_alignParentEnd="true"
             android:layout_marginTop="10dp"
-            android:layout_marginRight="10dp"
+            android:layout_marginEnd="10dp"
             android:background="@drawable/ic_settings_black" />
 
     </RelativeLayout>
@@ -46,23 +43,8 @@
         android:background="@android:color/white"
         android:visibility="gone">
 
-        <LinearLayout
-            android:id="@+id/configLayout"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:background="@android:color/white"
-            android:orientation="vertical"
-            android:padding="10dp">
-
-            <TextView
-                android:id="@+id/currentConfig"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:text="默认"
-                android:textSize="18sp" />
-
             <com.example.elasticviewlibrary.ElasticView
+                android:id="@+id/configLayout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
@@ -77,6 +59,15 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/currentConfig"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="10dp"
+                            android:layout_gravity="center"
+                            android:text="默认"
+                            android:textSize="18sp" />
 
                         <LinearLayout
                             android:id="@+id/chooseConfig"
@@ -164,7 +155,6 @@
             </com.example.elasticviewlibrary.ElasticView>
 
 
-        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/deviceLayout"
@@ -172,7 +162,6 @@
             android:layout_height="wrap_content"
             android:layout_toStartOf="@id/buttonLayout"
             android:layout_toEndOf="@id/configLayout"
-            android:background="@android:color/white"
             android:orientation="vertical">
 
             <RelativeLayout
@@ -195,7 +184,6 @@
                     android:layout_height="20dp"
                     android:layout_alignParentEnd="true"
                     android:layout_marginStart="35dp"
-                    android:layout_marginLeft="10dp"
                     android:layout_marginEnd="10dp"
                     android:background="@drawable/connection_state_selector" />
             </RelativeLayout>
@@ -206,66 +194,47 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
                 <Button
                     android:id="@+id/connectDevice"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:text="连接" />
 
-                <Button
-                    android:id="@+id/disconnectDevice"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:enabled="false"
-                    android:text="断开" />
-            </LinearLayout>
+            <Button
+                android:id="@+id/disconnectDevice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:text="断开" />
 
         </LinearLayout>
 
-        <RelativeLayout
-            android:id="@+id/infoLayout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_below="@+id/deviceLayout"
-            android:layout_toStartOf="@id/buttonLayout"
-            android:layout_toEndOf="@id/configLayout"
-            android:background="@android:color/white"
-            android:orientation="vertical">
+<!--        <LinearLayout-->
+<!--            android:id="@+id/infoLayout"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:gravity="center"-->
+<!--            android:layout_below="@+id/deviceLayout"-->
+<!--            android:layout_toStartOf="@id/buttonLayout"-->
+<!--            android:layout_toEndOf="@id/configLayout"-->
+<!--            android:orientation="vertical">-->
 
-            <TextView
-                android:id="@+id/info"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_alignParentTop="true"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="20dp"
-                android:padding="20dp"
-                android:textAlignment="center" />
+<!--            <TextView-->
+<!--                android:id="@+id/info"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginTop="20dp"-->
+<!--                android:layout_marginBottom="20dp"-->
+<!--                android:padding="20dp"-->
+<!--                android:textAlignment="center" />-->
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_marginBottom="20dp"
-                android:orientation="vertical">
+<!--            <Button-->
+<!--                android:id="@+id/back"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="返回" />-->
 
-                <Button
-                    android:id="@+id/back"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="返回" />
-
-            </LinearLayout>
-
-        </RelativeLayout>
+<!--        </LinearLayout>-->
 
 
         <com.example.elasticviewlibrary.ElasticView
@@ -273,7 +242,6 @@
             android:layout_width="150dp"
             android:layout_height="match_parent"
             android:layout_alignParentEnd="true"
-            android:background="@android:color/white"
             android:gravity="end"
             android:orientation="vertical">
 
@@ -286,7 +254,14 @@
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:gravity="end"
                     android:orientation="vertical">
+
+                    <Button
+                        android:id="@+id/back"
+                        android:background="@drawable/ic_exit_black"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"/>
 
 
                     <androidx.appcompat.widget.AppCompatSpinner
@@ -333,9 +308,11 @@
                         android:layout_height="wrap_content"/>
 
                 </LinearLayout>
+
             </ScrollView>
 
         </com.example.elasticviewlibrary.ElasticView>
 
     </RelativeLayout>
+
 </RelativeLayout>

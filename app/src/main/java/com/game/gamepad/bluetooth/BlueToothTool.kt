@@ -12,6 +12,10 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.*
+import java.util.concurrent.BlockingDeque
+import java.util.concurrent.LinkedBlockingDeque
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 
 object BlueToothTool {
@@ -27,6 +31,18 @@ object BlueToothTool {
     private var connectThread: ConnectThread? = null
     //和pc端一致
     private val uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+    //线程等待队列
+    private val workQueue = LinkedBlockingDeque<Runnable>(30)
+    //线程池
+    private val threadPool = ThreadPoolExecutor(
+        8,
+        16,
+        5000,
+        TimeUnit.MILLISECONDS,
+        workQueue
+    ) { _, _ ->
+        ToastUtil.show("发生未知错误")
+    }
 
     fun setListener(listen: BluetoothListen) {
         blueToothtListen = listen
@@ -109,7 +125,7 @@ object BlueToothTool {
      * Charset is UTF_8
      */
     private fun receiveMsg() {
-        Thread {
+        threadPool.execute {
             val receiveCommand = "GamePadPC"
             if (bluetoothSocket!!.isConnected) {
                 try {
@@ -125,37 +141,42 @@ object BlueToothTool {
                     blueToothtListen.connected(false)
                 }
             }
-        }.run()
+        }
+    }
+
+    //多一层调用，使用线程池来管理
+    fun sendMsg(msg:String){
+        threadPool.execute { privateSendMsg(msg) }
     }
 
     /**
      * msg charset is UTF_8
      */
     @Synchronized
-    fun sendMsg(msg: String) {
-            lastTime = System.currentTimeMillis()
-            if (bluetoothSocket == null || !bluetoothSocket!!.isConnected) {
-                ToastUtil.show("未连接")
-                return
-            }
-            try {
-                outputStream = bluetoothSocket!!.outputStream
-                outputStream!!.write(msg.toByteArray(Charsets.UTF_8))
-                outputStream!!.flush()
-                //blueToothtListen.toast("消息发送成功")
-            } catch (e: Exception) {
-                e.printStackTrace()
-                ToastUtil.show("消息发送失败")
-                disConnect()
-                //connectListen.connected(false)
-            }
+    private fun privateSendMsg(msg: String) {
+        lastTime = System.currentTimeMillis()
+        if (bluetoothSocket == null || !bluetoothSocket!!.isConnected) {
+            ToastUtil.show("未连接")
+            return
+        }
+        try {
+            outputStream = bluetoothSocket!!.outputStream
+            outputStream!!.write(msg.toByteArray(Charsets.UTF_8))
+            outputStream!!.flush()
+            //blueToothtListen.toast("消息发送成功")
+        } catch (e: Exception) {
+            e.printStackTrace()
+            ToastUtil.show("消息发送失败")
+            disConnect()
+            //connectListen.connected(false)
+        }
     }
 
     fun disConnect() {
         if (bluetoothSocket != null) {
             if (outputStream != null) {
                 outputStream!!.close()
-                outputStream = null;
+                outputStream = null
             }
             if (inputStream != null) {
                 inputStream!!.close()

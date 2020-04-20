@@ -16,6 +16,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.*
 import android.provider.Settings
+import android.util.Log
 import android.view.*
 import android.widget.ArrayAdapter
 import android.widget.LinearLayout
@@ -33,6 +34,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.lang.Exception
+import java.util.concurrent.LinkedBlockingDeque
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
 //todo
@@ -59,6 +63,16 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
     private val deviceAdapter by lazy {
         ArrayAdapter<String>(this, R.layout.simple_spinner_item, deviceNameList)
     }
+    //线程等待队列
+    private val workQueue = LinkedBlockingDeque<Runnable>(10)
+    //线程池
+    private val threadPool = ThreadPoolExecutor(
+        4,
+        10,
+        5000,
+        TimeUnit.MILLISECONDS,
+        workQueue
+    ){_,_->ToastUtil.show("线程池爆了，操作不要太频繁哦!")}
     //震动
     private val vibrator: Vibrator by lazy {
         getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
@@ -176,24 +190,27 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
     }
 
     private fun init() {
+        isMain("init")
         BlueToothTool.setListener(this)
-        //deviceSpinner.adapter = deviceAdapter
         //初始化蓝牙
         BlueToothTool.init()
         //初始化toast工具
         ToastUtil.init(this)
-        if (BlueToothTool.isEnable()) {
-            val devices = BlueToothTool.getDevices()
-            devices.forEach { d ->
-                deviceList.add(d)
-                deviceNameList.add(d.name)
-            }
-        }
+
         //用于保存配置
         ConfigFactory.init(this)
+        loadDevice()
+//        if (BlueToothTool.isEnable()) {
+//
+//            val devices = BlueToothTool.getDevices()
+//            devices.forEach { d ->
+//                deviceList.add(d)
+//                deviceNameList.add(d.name)
+//            }
+//        }
         deviceSpinner.adapter = deviceAdapter
         deviceAdapter.notifyDataSetChanged()
-        //val adapter = ArrayAdapter<String>(this, R.layout.simple_spinner_item, array)
+
         //连接和断开连接
         connectDevice.setOnClickListener(this)
         disconnectDevice.setOnClickListener(this)
@@ -212,10 +229,9 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
         //刷新设备
         reFresh.setOnClickListener(this)
         //自动选择配置
-        chooseConfig.callOnClick()
-        //openSetting()
-        settingLayout.visibility = View.VISIBLE
-        closeSetting()
+        //chooseConfig.callOnClick()
+        openSetting()
+        //closeSetting()
     }
 
     private fun loadDevice() {
@@ -230,69 +246,91 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
         handler.sendMessage(msg)
     }
 
+    private fun isMain(msg:String){
+        if(mainLooper.thread.id == Thread.currentThread().id)
+            Log.e(msg,"当前线程是主线程")
+        else
+            Log.e(msg,"当前线程不是主线程")
+    }
+
     private fun createButton() {
-        val key = keyValue.selectedItem.toString()
-        if (key == "") return
-        var xValue = 500f
-        var yValue = 500f
-        var radiusValue = 100
-        try {
-            val xText = x.text.toString()
-            val yText = y.text.toString()
-            val rText = radius.text.toString()
-            if (xText != "")
-                xValue = xText.toFloat()
-            if (yText != "")
-                yValue = yText.toFloat()
-            if (rText != "")
-                radiusValue = rText.toInt()
-        } catch (e: Exception) {
-            Toast.makeText(this, "参数有误", Toast.LENGTH_SHORT).show()
-            return
+        threadPool.execute {
+            isMain("createButton")
+            val key = keyValue.selectedItem.toString()
+            if (key == "")return@execute
+            var xValue = 500f
+            var yValue = 500f
+            var radiusValue = 100
+            try {
+                val xText = x.text.toString()
+                val yText = y.text.toString()
+                val rText = radius.text.toString()
+                if (xText != "")
+                    xValue = xText.toFloat()
+                if (yText != "")
+                    yValue = yText.toFloat()
+                if (rText != "")
+                    radiusValue = rText.toInt()
+            } catch (e: Exception) {
+                Toast.makeText(this, "参数有误", Toast.LENGTH_SHORT).show()
+                return@execute
+            }
+            val gameButton =
+                GameButton(home.context, home, removeListener, key, xValue, yValue, radiusValue)
+            gameButtonList.add(gameButton)
         }
-        val gameButton =
-            GameButton(home.context, home, removeListener, key, xValue, yValue, radiusValue)
-        gameButtonList.add(gameButton)
     }
 
     private fun openSetting() {
-        val animatorSet = AnimatorSet()
-        animatorSet.playTogether(
-            valueAnimatorCreate(0f,1f){animator->
-                settingLayout.alpha = animator.animatedValue as Float
-            },
-            valueAnimatorCreate(-deviceLayout.height,0){animator->
-                val layoutParams = deviceLayout.layoutParams as RelativeLayout.LayoutParams
-                layoutParams.topMargin = animator.animatedValue as Int
-                deviceLayout.layoutParams = layoutParams
-            },
-            valueAnimatorCreate(-infoLayout.height,0){animator->
-                val layoutParams = infoLayout.layoutParams as RelativeLayout.LayoutParams
-                    layoutParams.bottomMargin = animator.animatedValue as Int
-                infoLayout.layoutParams = layoutParams
-            },
-            valueAnimatorCreate(-configLayout.width,0){animator->
-                val layoutParams = configLayout.layoutParams as RelativeLayout.LayoutParams
+        threadPool.execute {
+            isMain("openSetting")
+            val animatorSet = AnimatorSet()
+            animatorSet.playTogether(
+                //setting界面淡入
+                valueAnimatorCreate(0f, 1f) { animator ->
+                    settingLayout.alpha = animator.animatedValue as Float
+                },
+                //主界面淡出
+                valueAnimatorCreate(1f,0f){animator->
+                    home.alpha = animator.animatedValue as Float
+                },
+                valueAnimatorCreate(-deviceLayout.height, 0) { animator ->
+                    val layoutParams = deviceLayout.layoutParams as RelativeLayout.LayoutParams
+                    layoutParams.topMargin = animator.animatedValue as Int
+                    deviceLayout.layoutParams = layoutParams
+                },
+//                valueAnimatorCreate(-infoLayout.height, 0) { animator ->
+//                    val layoutParams = infoLayout.layoutParams as RelativeLayout.LayoutParams
+//                    layoutParams.bottomMargin = animator.animatedValue as Int
+//                    infoLayout.layoutParams = layoutParams
+//                },
+                valueAnimatorCreate(-configLayout.width, 0) { animator ->
+                    val layoutParams = configLayout.layoutParams as RelativeLayout.LayoutParams
                     layoutParams.leftMargin = animator.animatedValue as Int
-                configLayout.layoutParams = layoutParams
-            },
-            valueAnimatorCreate(-buttonLayout.width,0){animator->
-                val layoutParams = buttonLayout.layoutParams as RelativeLayout.LayoutParams
+                    configLayout.layoutParams = layoutParams
+                },
+                valueAnimatorCreate(-buttonLayout.width, 0) { animator ->
+                    val layoutParams = buttonLayout.layoutParams as RelativeLayout.LayoutParams
                     layoutParams.rightMargin = animator.animatedValue as Int
-                buttonLayout.layoutParams = layoutParams
-            }
-        )
-        animatorSet.duration = 400
-        animatorSet.addListener(object :Animator.AnimatorListener{
-            override fun onAnimationRepeat(animation: Animator?) {}
-            override fun onAnimationEnd(animation: Animator?) {}
-            override fun onAnimationCancel(animation: Animator?) {}
-            override fun onAnimationStart(animation: Animator?) {
-                if (settingLayout.visibility != View.VISIBLE)
+                    buttonLayout.layoutParams = layoutParams
+                }
+            )
+            animatorSet.duration = 400
+            animatorSet.addListener(object : Animator.AnimatorListener {
+                override fun onAnimationRepeat(animation: Animator?) {}
+                override fun onAnimationEnd(animation: Animator?) {
+                    home.visibility = View.GONE
+                    animatorSet.removeAllListeners()
+                }
+                override fun onAnimationCancel(animation: Animator?) {}
+                override fun onAnimationStart(animation: Animator?) {
                     settingLayout.visibility = View.VISIBLE
+                }
+            })
+            runOnUiThread {
+                animatorSet.start()
             }
-        })
-        animatorSet.start()
+        }
         /**
         translate(deviceLayout,0f,0f,deviceLayout.y-deviceLayout.height,deviceLayout.y,400)
         translate(infoLayout,0f,0f,infoLayout.y+infoLayout.height,infoLayout.y,400)
@@ -302,52 +340,65 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
     }
 
     private fun closeSetting() {
-        val animatorSet = AnimatorSet()
-        animatorSet.playTogether(
-            valueAnimatorCreate(1f,0f){animator->
-                settingLayout.alpha = animator.animatedValue as Float
-            },
-            valueAnimatorCreate(0,-deviceLayout.height){animator->
-                val layoutParams = deviceLayout.layoutParams as RelativeLayout.LayoutParams
+        threadPool.execute {
+            isMain("closeSetting")
+            val animatorSet = AnimatorSet()
+            animatorSet.playTogether(
+                //两个界面交替
+                valueAnimatorCreate(1f, 0f) { animator ->
+                    settingLayout.alpha = animator.animatedValue as Float
+                },
+                valueAnimatorCreate(0f, 1f) { animator ->
+                    home.alpha = animator.animatedValue as Float
+                },
+                valueAnimatorCreate(0, -deviceLayout.height) { animator ->
+                    val layoutParams = deviceLayout.layoutParams as RelativeLayout.LayoutParams
                     layoutParams.topMargin = animator.animatedValue as Int
-                deviceLayout.layoutParams = layoutParams
-            },
-            valueAnimatorCreate(0,-infoLayout.height){animator->
-                val layoutParams = infoLayout.layoutParams as RelativeLayout.LayoutParams
-                    layoutParams.bottomMargin = animator.animatedValue as Int
-                infoLayout.layoutParams = layoutParams
-            },
-            valueAnimatorCreate(0,-configLayout.width){animator->
-                val layoutParams = configLayout.layoutParams as RelativeLayout.LayoutParams
+                    deviceLayout.layoutParams = layoutParams
+                },
+//                valueAnimatorCreate(0, -infoLayout.height) { animator ->
+//                    val layoutParams = infoLayout.layoutParams as RelativeLayout.LayoutParams
+//                    layoutParams.bottomMargin = animator.animatedValue as Int
+//                    infoLayout.layoutParams = layoutParams
+//                },
+                valueAnimatorCreate(0, -configLayout.width) { animator ->
+                    val layoutParams = configLayout.layoutParams as RelativeLayout.LayoutParams
                     layoutParams.leftMargin = animator.animatedValue as Int
-                configLayout.layoutParams=layoutParams
-            },
-            valueAnimatorCreate(0,-buttonLayout.width){animator->
-                val layoutParams = buttonLayout.layoutParams as RelativeLayout.LayoutParams
+                    configLayout.layoutParams = layoutParams
+                },
+                valueAnimatorCreate(0, -buttonLayout.width) { animator ->
+                    val layoutParams = buttonLayout.layoutParams as RelativeLayout.LayoutParams
                     layoutParams.rightMargin = animator.animatedValue as Int
-                buttonLayout.layoutParams = layoutParams
+                    buttonLayout.layoutParams = layoutParams
+                }
+            )
+            animatorSet.duration = 400
+            animatorSet.addListener(object : Animator.AnimatorListener {
+                override fun onAnimationRepeat(animation: Animator?) {}
+                override fun onAnimationEnd(animation: Animator?) {
+                    settingLayout.visibility = View.GONE
+                    animatorSet.removeAllListeners()
+                }
+
+                override fun onAnimationCancel(animation: Animator?) {}
+                override fun onAnimationStart(animation: Animator?) {
+                    home.visibility = View.VISIBLE
+                }
+            })
+            runOnUiThread {
+                animatorSet.start()
             }
-        )
-        animatorSet.duration = 400
-        animatorSet.addListener(object :Animator.AnimatorListener{
-            override fun onAnimationRepeat(animation: Animator?) {}
-            override fun onAnimationEnd(animation: Animator?) {
-                settingLayout.visibility = View.GONE
+            /**
+            translate(deviceLayout,0f,0f,deviceLayout.y,deviceLayout.y-deviceLayout.height,400)
+            translate(infoLayout,0f,0f,infoLayout.y,infoLayout.y+infoLayout.height,400)
+            translate(configLayout,configLayout.x,configLayout.x-configLayout.width,0f,0f,500)
+            translate(buttonLayout,buttonLayout.x,buttonLayout.x+buttonLayout.width,0f,0f,500)
+            GlobalScope.launch(Dispatchers.Main) {
+            delay(500)
+            settingLayout.visibility = View.GONE
             }
-            override fun onAnimationCancel(animation: Animator?) {}
-            override fun onAnimationStart(animation: Animator?) {}
-        })
-        animatorSet.start()
-        /**
-        translate(deviceLayout,0f,0f,deviceLayout.y,deviceLayout.y-deviceLayout.height,400)
-        translate(infoLayout,0f,0f,infoLayout.y,infoLayout.y+infoLayout.height,400)
-        translate(configLayout,configLayout.x,configLayout.x-configLayout.width,0f,0f,500)
-        translate(buttonLayout,buttonLayout.x,buttonLayout.x+buttonLayout.width,0f,0f,500)
-        GlobalScope.launch(Dispatchers.Main) {
-        delay(500)
-        settingLayout.visibility = View.GONE
+             */
         }
-         */
     }
 
     private fun valueAnimatorCreate(
@@ -405,7 +456,7 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
             }
             //加载设置
             chooseConfig -> {
-                Thread {
+                threadPool.execute {
                     for (index in gameButtonList.indices) {
                         gameButtonList[index].destroy(false)
                     }
@@ -414,11 +465,11 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
                     for (gameButton in list) {
                         gameButtonList.add(gameButton)
                     }
-                }.run()
+                }
             }
             //保存设置
             saveConfig -> {
-                Thread {
+                threadPool.execute {
                     var json = ""
                     for ((index, gameButton) in gameButtonList.withIndex()) {
                         json += gameButton.getBean()
@@ -429,7 +480,7 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
                         json =
                         "{\"name\":\"default\",\"desc\":\"nothing\",\"buttons\":[$json]}"
                     )
-                }.run()
+                }
             }
             //连接设备
             connectDevice -> {
@@ -514,9 +565,9 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
                 connectDevice.isEnabled = false
                 disconnectDevice.isEnabled = true
                 //开启蓝牙活跃
-                Thread {
+                threadPool.execute {
                     BlueToothTool.positive()
-                }.run()
+                }
             } else {
                 connectState.isActivated = false
                 connectionState.isActivated = false
