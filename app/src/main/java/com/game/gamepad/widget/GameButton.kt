@@ -11,6 +11,9 @@ import android.widget.Button
 import android.widget.LinearLayout
 import com.game.gamepad.R
 import com.game.gamepad.bluetooth.BlueToothTool
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 //import io.javac.ManyBlue.ManyBlue
 
@@ -99,23 +102,21 @@ class GameButton(
             this.layout.y = event.rawY - button.height / 2
             return true
         }
-        if (v.id == R.id.btn && event.action != MotionEvent.ACTION_MOVE) {
-//            ManyBlue.blueWriteData("$key:$keyState",ManyBlue.getConnTagAll())
-            //if (BlueTooth.connected) BlueTooth.send(key,keyState)
-            //if (BlueToothTool.isConnected())
-            //Log.e("SL","action:${event.action}")
-            if (BlueToothTool.isConnected())
-                BlueToothTool.sendMsg(
-                    "$key:${when (event.action) {
-                        MotionEvent.ACTION_DOWN -> {
-                            true
-                        };MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                            false
-                        };else -> {
-                            false
-                        }
-                    }}"
-                )
+        if (v.id == R.id.btn) {
+            when (event.action){
+                MotionEvent.ACTION_DOWN->{
+                    button.isPressed = true
+                    if (BlueToothTool.isConnected())
+                    BlueToothTool.sendMsg("$key:true")
+                }
+                MotionEvent.ACTION_UP,MotionEvent.ACTION_CANCEL->{
+                    button.isPressed = false
+                    if (BlueToothTool.isConnected())
+                    BlueToothTool.sendMsg("$key:false")
+                }
+                else->{
+                }
+            }
         }
         return true
     }

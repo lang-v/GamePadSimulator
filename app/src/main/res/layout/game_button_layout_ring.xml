@@ -9,7 +9,7 @@
         android:id="@+id/btn"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:background="@drawable/ring_button"
+        android:background="@drawable/button_selector"
         android:gravity="center"
         android:textStyle="bold" />
 

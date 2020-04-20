@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.os.Vibrator
 import android.util.Log
 import android.view.ViewGroup
+import com.game.gamepad.utils.ToastUtil
 import com.google.gson.Gson
 
 object ConfigFactory{
@@ -19,7 +20,14 @@ object ConfigFactory{
         val json = get(configName) ?: return ArrayList()
 //        Log.e("SL","loadJson : $json")
         val gson = Gson()
-        val configBean = gson.fromJson<ConfigBean>(json,ConfigBean::class.java)
+        var configBean:ConfigBean?=null
+        try {
+            configBean = gson.fromJson<ConfigBean>(json,ConfigBean::class.java)
+        }catch (e:Exception){
+            e.printStackTrace()
+            ToastUtil.show("载入配置失败")
+            return ArrayList()
+        }
         val buttons = ArrayList<GameButton>()
         configBean.buttons.forEach { b->
             buttons.add(GameButton(context,viewGroup,listener,b.key,b.x,b.y,b.r))
