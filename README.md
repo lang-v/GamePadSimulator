@@ -1,4 +1,4 @@
-# GamePadSimulator
+# GamePadSimulator（暂停维护）
 ## 游戏手柄模拟器的手机端（Android）
 ***
  PS：和PC端配套使用
