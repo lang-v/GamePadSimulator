@@ -2,8 +2,6 @@ package com.game.gamepad.widget
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.os.Vibrator
-import android.util.Log
 import android.view.ViewGroup
 import com.game.gamepad.utils.ToastUtil
 import com.google.gson.Gson
@@ -20,7 +18,7 @@ object ConfigFactory{
         val json = get(configName) ?: return ArrayList()
 //        Log.e("SL","loadJson : $json")
         val gson = Gson()
-        var configBean:ConfigBean?=null
+        val configBean: ConfigBean?
         try {
             configBean = gson.fromJson<ConfigBean>(json,ConfigBean::class.java)
         }catch (e:Exception){

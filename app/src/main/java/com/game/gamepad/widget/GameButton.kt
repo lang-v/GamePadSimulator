@@ -1,8 +1,6 @@
 package com.game.gamepad.widget
 
 import android.content.Context
-import android.os.Vibrator
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -30,7 +28,7 @@ class GameButton(
     private val TAG = "GameButton"
     private var key = ""
     private var MOVESTATE = false//移动
-    private lateinit var listener: RemoveListener
+    private var listener: RemoveListener
     //这里的attachtoroot是真的坑，直接添加到根视图下了
     private var layout: LinearLayout = LayoutInflater.from(context).inflate(
         R.layout.game_button_layout_ring,
@@ -58,10 +56,6 @@ class GameButton(
             button.setOnTouchListener(this@GameButton)
         }
 
-    }
-
-    fun getLayout():LinearLayout{
-        return layout
     }
 
     /**
@@ -105,17 +99,17 @@ class GameButton(
         if (MOVESTATE) {
             this.layout.x = event.rawX - button.width / 2 + close.width
             this.layout.y = event.rawY - button.height / 2
-            return true
+            return false
         }
         if (v.id == R.id.btn) {
             when (event.action){
                 MotionEvent.ACTION_DOWN->{
-                    button.isPressed = true
+                    //button.isPressed = true
                     if (BlueToothTool.isConnected())
                     BlueToothTool.sendMsg("$key:true")
                 }
                 MotionEvent.ACTION_UP,MotionEvent.ACTION_CANCEL->{
-                    button.isPressed = false
+                    //button.isPressed = false
                     if (BlueToothTool.isConnected())
                     BlueToothTool.sendMsg("$key:false")
                 }
@@ -123,7 +117,7 @@ class GameButton(
                 }
             }
         }
-        return true
+        return false
     }
 
     fun getBean():String{

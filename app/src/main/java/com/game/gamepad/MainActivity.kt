@@ -3,7 +3,6 @@ package com.game.gamepad
 import android.Manifest
 import android.animation.Animator
 import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
@@ -17,10 +16,11 @@ import android.net.Uri
 import android.os.*
 import android.provider.Settings
 import android.util.Log
-import android.view.*
+import android.view.View
+import android.view.WindowManager
 import android.widget.ArrayAdapter
-import android.widget.LinearLayout
 import android.widget.RelativeLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.game.gamepad.bluetooth.BlueToothTool
@@ -30,14 +30,9 @@ import com.game.gamepad.widget.ConfigFactory
 import com.game.gamepad.widget.GameButton
 import com.smarx.notchlib.NotchScreenManager
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import java.lang.Exception
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import kotlin.collections.ArrayList
 
 //todo
 // 1.给按键配置做一个本地存储
@@ -45,7 +40,7 @@ import kotlin.collections.ArrayList
 // 3.制作摇杆控件
 // 4.等待修复偶尔卡顿的问题
 // 5.美化菜单界面
-class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothListen {
+class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothListener {
     private val tag = "MainActivity"
     //记录连续按两次退出
     private var lastTime: Long = 0L
@@ -190,7 +185,7 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
     }
 
     private fun init() {
-        isMain("init")
+//        isMain("init")
         BlueToothTool.setListener(this)
         //初始化蓝牙
         BlueToothTool.init()
@@ -210,6 +205,11 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
 //        }
         deviceSpinner.adapter = deviceAdapter
         deviceAdapter.notifyDataSetChanged()
+
+        chooseConfig.findViewById<TextView>(R.id.text).text = "选择配置"
+        saveConfig.findViewById<TextView>(R.id.text).text = "保存配置"
+        modifyConfig.findViewById<TextView>(R.id.text).text = "修改配置"
+        addConfig.findViewById<TextView>(R.id.text).text = "添加配置"
 
         //连接和断开连接
         connectDevice.setOnClickListener(this)
@@ -255,7 +255,7 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
 
     private fun createButton() {
         threadPool.execute {
-            isMain("createButton")
+            //isMain("createButton")
             val key = keyValue.selectedItem.toString()
             if (key == "")return@execute
             var xValue = 500f
@@ -283,7 +283,7 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
 
     private fun openSetting() {
         threadPool.execute {
-            isMain("openSetting")
+//            isMain("openSetting")
             val animatorSet = AnimatorSet()
             animatorSet.playTogether(
                 //setting界面淡入
@@ -319,7 +319,7 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
             animatorSet.addListener(object : Animator.AnimatorListener {
                 override fun onAnimationRepeat(animation: Animator?) {}
                 override fun onAnimationEnd(animation: Animator?) {
-                    home.visibility = View.GONE
+                    //home.visibility = View.GONE
                     animatorSet.removeAllListeners()
                 }
                 override fun onAnimationCancel(animation: Animator?) {}
@@ -341,7 +341,7 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
 
     private fun closeSetting() {
         threadPool.execute {
-            isMain("closeSetting")
+//            isMain("closeSetting")
             val animatorSet = AnimatorSet()
             animatorSet.playTogether(
                 //两个界面交替
@@ -382,7 +382,7 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
 
                 override fun onAnimationCancel(animation: Animator?) {}
                 override fun onAnimationStart(animation: Animator?) {
-                    home.visibility = View.VISIBLE
+                    //home.visibility = View.VISIBLE
                 }
             })
             runOnUiThread {
@@ -457,6 +457,7 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
             //加载设置
             chooseConfig -> {
                 threadPool.execute {
+                    closeSetting()
                     for (index in gameButtonList.indices) {
                         gameButtonList[index].destroy(false)
                     }
@@ -540,7 +541,7 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == Activity.RESULT_CANCELED) {
+        if (resultCode == RESULT_CANCELED) {
             if (!permissionManager.checkPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 || !permissionManager.checkPermission(
                     this,
@@ -557,7 +558,12 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
     override fun connected(connected: Boolean) {
         runOnUiThread {
             if (connected) {
-                vibrator.vibrate(300)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    vibrator.vibrate(VibrationEffect.createOneShot(300,1))
+                }
+                else{
+                    vibrator.vibrate(300)
+                }
                 //下面这两个一个是设置页面的连接状态一个是主页面的连接状态
                 connectState.isActivated = true
                 connectionState.isActivated = true
