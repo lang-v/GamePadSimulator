@@ -1,6 +1,7 @@
 package com.game.gamepad.widget
 
 import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -9,6 +10,7 @@ import android.widget.Button
 import android.widget.LinearLayout
 import com.game.gamepad.R
 import com.game.gamepad.bluetooth.BlueToothTool
+import com.game.gamepad.utils.ToastUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -102,24 +104,26 @@ class GameButton(
             return false
         }
         if (v.id == R.id.btn) {
+            Log.e("SL","event action is ${event.action}")
             when (event.action){
                 MotionEvent.ACTION_DOWN->{
                     //button.isPressed = true
                     if (BlueToothTool.isConnected())
                     BlueToothTool.sendMsg("$key:true")
                 }
-                MotionEvent.ACTION_UP,MotionEvent.ACTION_CANCEL->{
+                MotionEvent.ACTION_UP->{
+                    //Log.e("SL", "is cancel ${MotionEvent.ACTION_CANCEL == event.action}")
+                    //ToastUtil.show("SL is cancel ${MotionEvent.ACTION_CANCEL == event.action}")
                     //button.isPressed = false
                     if (BlueToothTool.isConnected())
                     BlueToothTool.sendMsg("$key:false")
-                }
-                else->{
                 }
             }
         }
         return false
     }
 
+    //返回这个按钮的属性，便于保存到本地，再恢复，假装序列化
     fun getBean():String{
         return """
             {"height":${button.height},"key":"$key","width":${button.width},"x":${layout.x},"y":${layout.y},"r":${radius}}

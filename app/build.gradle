@@ -11,8 +11,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 29
         versionCode 1
-        versionName "1.0"
-
+        versionName "1.0.3"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -26,7 +25,7 @@ android {
         variant ->
             variant.outputs.all {
                 //在这里修改apk文件名，引号内的字符串都可以随便定义
-                outputFileName = "GamePadSimulator-v1.0.0.apk"
+                outputFileName = "GamePadSimulator-v${versionName}.apk"
             }
     }
 }

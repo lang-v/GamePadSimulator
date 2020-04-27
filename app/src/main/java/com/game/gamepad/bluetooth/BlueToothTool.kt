@@ -126,6 +126,7 @@ object BlueToothTool {
         return bluetoothSocket!!.isConnected
     }
 
+    //获取已配对的设备
     fun getDevices(): List<BluetoothDevice> {
         return bluetoothAdapter.bondedDevices.toList()
     }
@@ -134,7 +135,6 @@ object BlueToothTool {
      * 这个函数的作用是为了避免连接长时间没有消息引起卡顿
      */
     private var lastTime = 0L
-
     fun positive() {
         GlobalScope.launch {
             while (isConnected()) {
@@ -144,7 +144,6 @@ object BlueToothTool {
             }
         }
     }
-
     /**
      * Charset is UTF_8
      */
@@ -169,7 +168,7 @@ object BlueToothTool {
         }.run()
     }
 
-//    @Synchronized
+    @Synchronized
     fun sendMsg(msg: String){
         try {
             //入队
@@ -184,6 +183,7 @@ object BlueToothTool {
     /**
      * msg charset is UTF_8
      */
+    //@Synchronized
     private fun privateSendMsg(msg: String) {
 //        if(msg != " _")Log.e("BTMSG",msg)
         lastTime = System.currentTimeMillis()

@@ -35,11 +35,8 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 //todo
-// 1.给按键配置做一个本地存储
-// 2.控件大小可控，
-// 3.制作摇杆控件
-// 4.等待修复偶尔卡顿的问题
-// 5.美化菜单界面
+// 1.制作摇杆控件
+// 2.美化菜单界面
 class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothListener {
     private val tag = "MainActivity"
     //记录连续按两次退出
@@ -575,6 +572,12 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
                     BlueToothTool.positive()
                 }
             } else {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    vibrator.vibrate(VibrationEffect.createOneShot(200,2))
+                }
+                else{
+                    vibrator.vibrate(longArrayOf(0L,200L,0L,0L),1)
+                }
                 connectState.isActivated = false
                 connectionState.isActivated = false
                 Toast.makeText(this, "连接失败", Toast.LENGTH_SHORT).show()
