@@ -14,31 +14,35 @@ class MsgQueue(private val count: Int,private val listener: QueueChangeListener?
         val TASKERROR = 3
     }
     private val TAG = "MsgQueue"
-    private val workArray: Array<() -> Unit> = Array(count+1) { {}}
+    private val workArray: Array<String> = Array(count+1){""}
     private var frontIndex = 0
     private var rearIndex = 0
 
-    fun enQueue(job:()->Unit){
+    @Synchronized
+    fun enQueue(msg:String){
         if (full())throw MsgQueueFullException()
-        workArray[rearIndex] = job
-        rearIndex = (rearIndex+1)%count
+        workArray[rearIndex] = msg
+        rearInc()
         listener?.changed(ENQUEUE)
     }
 
-    fun deQueue():()->Unit{
+    private fun frontInc(){
+        frontIndex = (frontIndex+1)%count
+    }
+
+    private fun rearInc(){
+        rearIndex = (rearIndex+1)%count
+    }
+
+
+    @Synchronized
+    fun deQueue():String {
         if (empty()) throw MsgQueueEmptyException()
 //        Log.e(TAG,"full frontindex=$frontIndex , reaarindex=$rearIndex")
-        val job = workArray[frontIndex]
-        frontIndex = (frontIndex+1)%count
+        val msg = workArray[frontIndex]
+        frontInc()
         listener?.changed(DEQUEUE)
-        return {
-            try {
-                job.invoke()
-            }catch (e: MsgQueueTaskErrorException) {
-                listener?.changed(TASKERROR)
-            }
-            listener?.changed(TASKFINISED)
-        }
+        return msg
     }
 
     fun empty():Boolean{

@@ -6,10 +6,10 @@ buildscript {
         google()
         jcenter()
         //mavenCnetral()
-        maven{ url 'http://maven.aliyun.com/nexus/content/groups/public/'}
+        //maven{ url 'http://maven.aliyun.com/nexus/content/groups/public/'}
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.6.2'
+        classpath 'com.android.tools.build:gradle:3.6.3'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -22,7 +22,7 @@ allprojects {
         google()
         jcenter()
         //mavenCnetral()
-        maven{ url 'http://maven.aliyun.com/nexus/content/groups/public/'}
+        //maven{ url 'http://maven.aliyun.com/nexus/content/groups/public/'}
         maven { url 'https://jitpack.io' }
     }
 }

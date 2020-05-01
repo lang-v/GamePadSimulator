@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothSocket
 import android.util.Log
 import com.game.gamepad.queue.MsgQueue
 import com.game.gamepad.utils.ToastUtil
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -13,6 +14,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.*
+import java.util.concurrent.ThreadPoolExecutor
 
 
 object BlueToothTool {
@@ -29,42 +31,45 @@ object BlueToothTool {
     private var connectThread: ConnectThread? = null
     //和pc端一致
     private val uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-    private val msgQueueListener: MsgQueue.QueueChangeListener =object :
-        MsgQueue.QueueChangeListener{
-        override fun changed(state: Int) {
-            when(state){
-                //入队
-                MsgQueue.ENQUEUE->{
-                    if (sendMsgThreadRunning)return
-                    sendMsgThreadRunning = true
-                    Thread {
-                        msgQueue.deQueue().invoke()
-                    }.run()
-                }
-                //出队
-                MsgQueue.DEQUEUE-> {
-                }
-                //出队任务完成
-                MsgQueue.TASKFINISED->{
-                    //不为空继续执行
-                    if (!msgQueue.empty()) {
-                        Thread {
-                            msgQueue.deQueue().invoke()
-                        }.run()
-                    }
-                    else{
-                        sendMsgThreadRunning = false //重新设置标记位等待入队
-                    }
-                }
-                //任务异常中止
-                MsgQueue.TASKERROR->{
-                    //所有job出队
-                    msgQueue.clearAll()
-                }
-            }
-        }
-    }
-    private val msgQueue= MsgQueue(20, msgQueueListener)
+//    private val msgQueueListener: MsgQueue.QueueChangeListener =object :
+//        MsgQueue.QueueChangeListener{
+//        override fun changed(state: Int) {
+//            when(state){
+//                //入队
+//                MsgQueue.ENQUEUE->{
+////                    if (sendMsgThreadRunning)return
+////                    sendMsgThreadRunning = true
+////                    Thread {
+////                        //msgQueue.deQueue().invoke()
+////                    }.run()
+//                }
+//                //出队
+//                MsgQueue.DEQUEUE-> {
+//                }
+//                //出队任务完成
+//                MsgQueue.TASKFINISED->{
+//                    //不为空继续执行
+//                    if (!msgQueue.empty()) {
+//                        Thread {
+//                            //msgQueue.deQueue().invoke()
+//                        }.run()
+//                    }
+//                    else{
+//                        sendMsgThreadRunning = false //重新设置标记位等待入队
+//                    }
+//                }
+//                //任务异常中止
+//                MsgQueue.TASKERROR->{
+//                    //所有job出队
+//                    msgQueue.clearAll()
+//                }
+//            }
+//        }
+//    }
+    private val msgQueue= MsgQueue(20)
+
+    //用于发送消息的线程
+    private var msgThread :MsgThread? = null
 
 
     fun setListener(listener: BluetoothListener) {
@@ -103,6 +108,10 @@ object BlueToothTool {
 
     fun connect() {
 //        Log.e("SL","run")
+
+//        bluetoothAdapter.cancelDiscovery()
+//        bluetoothSocket = getDevices()[connectDeviceIndex].createRfcommSocketToServiceRecord(uuid)
+//        return
         connectThread = ConnectThread(getDevices()[connectDeviceIndex], bluetoothSocket)
         connectThread!!.start()
     }
@@ -138,7 +147,7 @@ object BlueToothTool {
     fun positive() {
         GlobalScope.launch {
             while (isConnected()) {
-                if (System.currentTimeMillis() - lastTime > 500)
+                if (System.currentTimeMillis() - lastTime > 1000)
                     sendMsg("_")
                 delay(1000)
             }
@@ -148,7 +157,7 @@ object BlueToothTool {
      * Charset is UTF_8
      */
     private fun receiveMsg() {
-        Thread {
+        GlobalScope.launch(Dispatchers.Main) {
             val receiveCommand = "GamePadPC"
             if (bluetoothSocket!!.isConnected) {
                 try {
@@ -165,15 +174,17 @@ object BlueToothTool {
                     blueToothtListener.connected(false)
                 }
             }
-        }.run()
+        }
     }
 
     @Synchronized
     fun sendMsg(msg: String){
         try {
             //入队
-            msgQueue.enQueue {
-                privateSendMsg(msg)
+            msgQueue.enQueue (msg)
+            if (msgThread == null) msgThread = MsgThread()
+            if (!msgThread!!.getRunning()) {
+                msgThread!!.start()
             }
         }catch (e:MsgQueue.MsgQueueFullException){
             ToastUtil.show("未知错误，消息队列爆满")
@@ -184,7 +195,7 @@ object BlueToothTool {
      * msg charset is UTF_8
      */
     //@Synchronized
-    private fun privateSendMsg(msg: String) {
+    fun privateSendMsg(msg: String) {
 //        if(msg != " _")Log.e("BTMSG",msg)
         lastTime = System.currentTimeMillis()
         if (bluetoothSocket == null || !bluetoothSocket!!.isConnected) {
@@ -210,6 +221,7 @@ object BlueToothTool {
     }
 
     fun disConnect() {
+        msgThread?.setRunning(false)
         if (bluetoothSocket != null) {
             if (outputStream != null) {
                 outputStream!!.close()
@@ -226,11 +238,47 @@ object BlueToothTool {
                 connectThread = null
             }
         }
-        blueToothtListener.connected(false)
+        //blueToothtListener.connected(false)
     }
 
     interface BluetoothListener {
         fun connected(connected: Boolean)
+    }
+
+    private class MsgThread :Thread(){
+        private var running = false
+        fun setRunning(state:Boolean)= run { running = state }
+        fun getRunning():Boolean{
+            return running
+        }
+        override fun run() {
+            running = true
+            while (isConnected() && running) {
+                if (bluetoothSocket == null || !bluetoothSocket!!.isConnected) {
+                    //ToastUtil.show("未连接")
+                    return
+                }
+                try {
+                    if (outputStream == null)
+                        outputStream = bluetoothSocket!!.outputStream
+                    while (running){
+                        lastTime = System.currentTimeMillis()
+                        if (msgQueue.empty())continue
+                        val msg = msgQueue.deQueue() + "_"
+                        outputStream!!.write(msg.toByteArray(Charsets.UTF_8))
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    ToastUtil.show("消息发送失败")
+                    if (outputStream != null)
+                        outputStream!!.close()
+                    outputStream = null
+                    disConnect()
+                    throw MsgQueue.MsgQueueTaskErrorException()
+                    //connectListen.connected(false)
+                }
+            }
+        }
     }
 
     private class ConnectThread(

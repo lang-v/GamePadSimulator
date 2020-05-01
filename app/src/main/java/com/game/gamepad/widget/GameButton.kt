@@ -98,6 +98,7 @@ class GameButton(
     }
 
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+
         if (event == null || v == null) return false
         if (MOVESTATE) {
             this.layout.x = event.rawX - button.width / 2 + close.width
@@ -124,13 +125,15 @@ class GameButton(
     //避免多线程下按下和抬起事件乱序
     @Synchronized
     private fun sendMsg(state: Boolean) {
-        if (BlueToothTool.isConnected())
-            BlueToothTool.sendMsg(
-                "$key:${
-                if (state) "true"
-                else "false"
-                }"
-            )
+        Thread {
+            if (BlueToothTool.isConnected())
+                BlueToothTool.sendMsg(
+                    "$key:${
+                    if (state) "true"
+                    else "false"
+                    }"
+                )
+        }.run()
     }
 
     //返回这个按钮的属性，便于保存到本地，再恢复，假装序列化
