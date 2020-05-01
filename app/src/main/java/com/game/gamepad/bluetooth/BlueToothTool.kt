@@ -77,7 +77,7 @@ object BlueToothTool {
             bluetoothAdapter.enable()
     }
 
-    //因为是手机连接电脑所以手机不需要开启蓝牙可见
+    //因为是手机连接电脑所以手机不需要开启蓝牙可见,省电
     fun search() {
         bluetoothAdapter.startDiscovery()
     }
@@ -132,7 +132,7 @@ object BlueToothTool {
     }
 
     /**
-     * 这个函数的作用是为了避免连接长时间没有消息引起卡顿
+     * 这个函数的作用是为了避免连接通道内长时间没有消息引起卡顿
      */
     private var lastTime = 0L
     fun positive() {
