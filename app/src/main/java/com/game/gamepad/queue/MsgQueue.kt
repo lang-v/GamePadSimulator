@@ -2,7 +2,15 @@ package com.game.gamepad.queue
 
 import android.util.Log
 
-class MsgQueue(private val count: Int,private val listener: QueueChangeListener?=null) {
+/**
+ * job -> string
+ * 直接将短期内的消息合并为一条直接出队
+ * 大大提升了消息的传输速度
+ * 原因是为了保证消息的绝对有序，很多方法都上了同步锁
+ * 每次只能一个消息出队，当多个键同时按下和松开时卡顿特别严重
+ */
+
+class MsgQueue(private val listener: QueueChangeListener?=null) {
     companion object{
         //入队时
         val ENQUEUE = 0
@@ -14,50 +22,37 @@ class MsgQueue(private val count: Int,private val listener: QueueChangeListener?
         val TASKERROR = 3
     }
     private val TAG = "MsgQueue"
-    private val workArray: Array<String> = Array(count+1){""}
-    private var frontIndex = 0
-    private var rearIndex = 0
+    private var firstMsg = ""
 
-    @Synchronized
     fun enQueue(msg:String){
-        if (full())throw MsgQueueFullException()
-        workArray[rearIndex] = msg
-        rearInc()
+        synchronized(this) {
+            firstMsg += (msg + "_")
+        }
         listener?.changed(ENQUEUE)
     }
 
-    private fun frontInc(){
-        frontIndex = (frontIndex+1)%count
-    }
-
-    private fun rearInc(){
-        rearIndex = (rearIndex+1)%count
-    }
-
-
-    @Synchronized
     fun deQueue():String {
-        if (empty()) throw MsgQueueEmptyException()
 //        Log.e(TAG,"full frontindex=$frontIndex , reaarindex=$rearIndex")
-        val msg = workArray[frontIndex]
-        frontInc()
         listener?.changed(DEQUEUE)
+        val msg = firstMsg
+        synchronized(this) {
+            firstMsg = ""
+        }
         return msg
     }
 
     fun empty():Boolean{
 //        Log.e(TAG,"empty frontindex=$frontIndex , reaarindex=$rearIndex")
-        return frontIndex == rearIndex
+        return firstMsg == ""
     }
 
     fun full():Boolean{
 //        Log.e(TAG,"full frontindex=$frontIndex , reaarindex=$rearIndex")
-        return frontIndex == (rearIndex+1)%count
+        return false
     }
 
     fun clearAll(){
-        frontIndex = 0
-        rearIndex = 0
+        firstMsg = ""
     }
 
     interface QueueChangeListener{

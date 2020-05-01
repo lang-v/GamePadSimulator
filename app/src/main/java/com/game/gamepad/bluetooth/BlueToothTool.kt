@@ -66,7 +66,7 @@ object BlueToothTool {
 //            }
 //        }
 //    }
-    private val msgQueue= MsgQueue(20)
+    private val msgQueue= MsgQueue()
 
     //用于发送消息的线程
     private var msgThread :MsgThread? = null
@@ -147,8 +147,11 @@ object BlueToothTool {
     fun positive() {
         GlobalScope.launch {
             while (isConnected()) {
-                if (System.currentTimeMillis() - lastTime > 1000)
+                Log.d("positive","on")
+                if (System.currentTimeMillis() - lastTime > 500) {
+                    Log.d("positive","send_")
                     sendMsg("_")
+                }
                 delay(1000)
             }
         }
@@ -177,17 +180,12 @@ object BlueToothTool {
         }
     }
 
-    @Synchronized
-    fun sendMsg(msg: String){
-        try {
-            //入队
-            msgQueue.enQueue (msg)
-            if (msgThread == null) msgThread = MsgThread()
-            if (!msgThread!!.getRunning()) {
-                msgThread!!.start()
-            }
-        }catch (e:MsgQueue.MsgQueueFullException){
-            ToastUtil.show("未知错误，消息队列爆满")
+    fun sendMsg(msg: String) {
+        //入队
+        msgQueue.enQueue(msg)
+        if (msgThread == null) msgThread = MsgThread()
+        if (!msgThread!!.getRunning()) {
+            msgThread!!.start()
         }
     }
 
@@ -238,7 +236,7 @@ object BlueToothTool {
                 connectThread = null
             }
         }
-        //blueToothtListener.connected(false)
+        blueToothtListener.connected(false)
     }
 
     interface BluetoothListener {
@@ -262,10 +260,12 @@ object BlueToothTool {
                     if (outputStream == null)
                         outputStream = bluetoothSocket!!.outputStream
                     while (running){
-                        lastTime = System.currentTimeMillis()
                         if (msgQueue.empty())continue
-                        val msg = msgQueue.deQueue() + "_"
+                        val msg = msgQueue.deQueue()
+                        lastTime = System.currentTimeMillis()
+                        Log.d("BTMSG",msg)
                         outputStream!!.write(msg.toByteArray(Charsets.UTF_8))
+                        //sleep(20)
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -274,7 +274,6 @@ object BlueToothTool {
                         outputStream!!.close()
                     outputStream = null
                     disConnect()
-                    throw MsgQueue.MsgQueueTaskErrorException()
                     //connectListen.connected(false)
                 }
             }
