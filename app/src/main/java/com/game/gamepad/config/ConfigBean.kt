@@ -1,15 +1,16 @@
-package com.game.gamepad.widget
+package com.game.gamepad.config
 
 
 data class ConfigBean(
     val buttons: List<Button>,
-    val desc: String,
-    val name: String
+    val desc: String
 )
 
 data class Button(
     val height: Int,
     val key: String,
+    val text: String,
+    val type: Int,
     val width: Int,
     val x: Float,
     val y: Float,

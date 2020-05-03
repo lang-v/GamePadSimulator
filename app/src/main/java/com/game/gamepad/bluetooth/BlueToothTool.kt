@@ -14,7 +14,6 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.*
-import java.util.concurrent.ThreadPoolExecutor
 
 
 object BlueToothTool {
@@ -31,41 +30,6 @@ object BlueToothTool {
     private var connectThread: ConnectThread? = null
     //和pc端一致
     private val uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-//    private val msgQueueListener: MsgQueue.QueueChangeListener =object :
-//        MsgQueue.QueueChangeListener{
-//        override fun changed(state: Int) {
-//            when(state){
-//                //入队
-//                MsgQueue.ENQUEUE->{
-////                    if (sendMsgThreadRunning)return
-////                    sendMsgThreadRunning = true
-////                    Thread {
-////                        //msgQueue.deQueue().invoke()
-////                    }.run()
-//                }
-//                //出队
-//                MsgQueue.DEQUEUE-> {
-//                }
-//                //出队任务完成
-//                MsgQueue.TASKFINISED->{
-//                    //不为空继续执行
-//                    if (!msgQueue.empty()) {
-//                        Thread {
-//                            //msgQueue.deQueue().invoke()
-//                        }.run()
-//                    }
-//                    else{
-//                        sendMsgThreadRunning = false //重新设置标记位等待入队
-//                    }
-//                }
-//                //任务异常中止
-//                MsgQueue.TASKERROR->{
-//                    //所有job出队
-//                    msgQueue.clearAll()
-//                }
-//            }
-//        }
-//    }
     private val msgQueue= MsgQueue()
 
     //用于发送消息的线程
@@ -99,19 +63,12 @@ object BlueToothTool {
         return bluetoothAdapter.state == BluetoothAdapter.STATE_ON
     }
 
-    fun preConnect(index: Int) {
-        bluetoothAdapter.state
+    fun connect(index: Int) {
+        if (connectThread != null)return
         connectDeviceIndex = index
         bluetoothSocket =
             bluetoothAdapter.bondedDevices.toList()[index].createRfcommSocketToServiceRecord(uuid)
-    }
-
-    fun connect() {
-//        Log.e("SL","run")
-
-//        bluetoothAdapter.cancelDiscovery()
-//        bluetoothSocket = getDevices()[connectDeviceIndex].createRfcommSocketToServiceRecord(uuid)
-//        return
+        //开启连接线程
         connectThread = ConnectThread(getDevices()[connectDeviceIndex], bluetoothSocket)
         connectThread!!.start()
     }
@@ -126,7 +83,7 @@ object BlueToothTool {
         } catch (e: Exception) {
             e.printStackTrace()
             Log.e("SL", "对接失败")
-            blueToothtListener.connected(false)
+            blueToothtListener.connected(false,0)
         }
     }
 
@@ -142,20 +99,28 @@ object BlueToothTool {
 
     /**
      * 这个函数的作用是为了避免连接通道内长时间没有消息引起卡顿
+     * 10s 发送一次数据包
      */
     private var lastTime = 0L
+    private var positiveRunning = false
     fun positive() {
+        if (positiveRunning)return
+        positiveRunning = true
         GlobalScope.launch {
             while (isConnected()) {
-                Log.d("positive","on")
-                if (System.currentTimeMillis() - lastTime > 500) {
-                    Log.d("positive","send_")
+                val currentTime = System.currentTimeMillis()
+                //Log.d("positive","on")
+                if (currentTime - lastTime >= 10000) {
+                    //Log.d("positive","send_")
                     sendMsg("_")
+                }else {
+                    delay(10000 - currentTime)
                 }
-                delay(1000)
             }
+            positiveRunning = false
         }
     }
+
     /**
      * Charset is UTF_8
      */
@@ -174,7 +139,7 @@ object BlueToothTool {
                 } catch (e: Exception) {
                     e.printStackTrace()
                     Log.e("SL", "receiveMsg 对接失败")
-                    blueToothtListener.connected(false)
+                    blueToothtListener.connected(false,0)
                 }
             }
         }
@@ -212,13 +177,16 @@ object BlueToothTool {
             if (outputStream != null)
                 outputStream!!.close()
             outputStream = null
-            disConnect()
+            disConnect(true)
             throw MsgQueue.MsgQueueTaskErrorException()
             //connectListen.connected(false)
         }
     }
 
-    fun disConnect() {
+    /**
+     * @param needCallBack 是否需要向view传递消息
+     */
+    fun disConnect(needCallBack:Boolean) {
         msgThread?.setRunning(false)
         if (bluetoothSocket != null) {
             if (outputStream != null) {
@@ -236,11 +204,17 @@ object BlueToothTool {
                 connectThread = null
             }
         }
-        blueToothtListener.connected(false)
+        if (needCallBack)
+            blueToothtListener.connected(false,1)
     }
 
     interface BluetoothListener {
-        fun connected(connected: Boolean)
+        /**
+         * @param state 只有当connected = false 才有意义
+         * 0 连接失败
+         * 1 断开连接
+         */
+        fun connected(connected: Boolean,state:Int=0)
     }
 
     private class MsgThread :Thread(){
@@ -273,7 +247,7 @@ object BlueToothTool {
                     if (outputStream != null)
                         outputStream!!.close()
                     outputStream = null
-                    disConnect()
+                    disConnect(true)
                     //connectListen.connected(false)
                 }
             }
@@ -315,7 +289,7 @@ object BlueToothTool {
                         )
                     }
                     Log.e("SL", "连接失败")
-                    blueToothtListener.connected(false)
+                    blueToothtListener.connected(false,0)
                     return
                 }
             }

@@ -11,7 +11,7 @@
         android:src="@mipmap/ic_launcher" />
 
     <TextView
-        android:id="@+id/text"
+        android:id="@+id/buttonText"
         android:layout_width="match_parent"
         android:layout_height="20dp"
         android:textAlignment="center" />

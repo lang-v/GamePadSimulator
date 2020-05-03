@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorAccent"
-    tools:context=".MainActivity">
+    tools:context=".activity.MainActivity">
 
     <RelativeLayout
         android:id="@+id/home"
@@ -66,8 +66,9 @@
 
                         <include android:id="@+id/chooseConfig" layout="@layout/setting_button"/>
                         <include android:id="@+id/addConfig" layout="@layout/setting_button"/>
-                        <include android:id="@+id/modifyConfig" layout="@layout/setting_button"/>
                         <include android:id="@+id/saveConfig" layout="@layout/setting_button"/>
+                        <include android:id="@+id/deleteConfig" layout="@layout/setting_button"/>
+                        <include android:id="@+id/modifyConfig" layout="@layout/setting_button"/>
 
                     </LinearLayout>
 
@@ -177,7 +178,6 @@
                         android:layout_width="50dp"
                         android:layout_height="50dp"/>
 
-
                     <androidx.appcompat.widget.AppCompatSpinner
                         android:id="@+id/keyValue"
                         android:layout_width="150dp"
@@ -206,13 +206,18 @@
                         android:digits="1234567890"
                         android:hint="半径:100" />
 
-                    <TextView
+                    <EditText
+                        android:id="@+id/type"
                         android:layout_width="150dp"
                         android:layout_height="wrap_content"
-                        android:clickable="false"
-                        android:layout_marginTop="5dp"
-                        android:lines="2"
-                        android:text="@string/tips" />
+                        android:digits="1234567890"
+                        android:hint="type:0" />
+
+                    <EditText
+                        android:id="@+id/buttonInfo"
+                        android:layout_width="150dp"
+                        android:layout_height="wrap_content"
+                        android:hint="buttonText:按钮" />
 
                     <Button
                         android:id="@+id/addButton"
@@ -220,6 +225,14 @@
                         android:text="@string/addButton"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"/>
+
+                    <TextView
+                        android:layout_width="150dp"
+                        android:layout_height="wrap_content"
+                        android:clickable="false"
+                        android:layout_marginTop="5dp"
+                        android:lines="2"
+                        android:text="@string/tips" />
 
                 </LinearLayout>
 

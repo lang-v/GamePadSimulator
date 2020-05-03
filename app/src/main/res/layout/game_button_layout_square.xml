@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:background="@android:color/transparent"
     android:layout_height="wrap_content">
 
     <Button
         android:id="@+id/btn"
-        android:background="@drawable/square_button"
+        android:background="@drawable/square_button_selector"
         android:text="Button"
         android:gravity="center"
         android:textStyle="bold"
@@ -15,10 +15,9 @@
 
     <Button
         android:id="@+id/close"
-        android:visibility="visible"
-        android:layout_alignParentEnd="true"
+        android:visibility="gone"
         android:background="@drawable/ic_close_black"
         android:layout_width="25dp"
         android:layout_height="25dp"/>
 
-</RelativeLayout>
+</LinearLayout>

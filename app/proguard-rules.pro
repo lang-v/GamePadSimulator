@@ -114,4 +114,4 @@
 ##---------------End: proguard configuration for Gson  ----------
 # 使用Gson时需要配置Gson的解析对象及变量都不混淆。不然Gson会找不到变量。
 #实体类
--keep public class com.game.gamepad.widget.**{*;}
+-keep public class com.game.gamepad.config.**{*;}

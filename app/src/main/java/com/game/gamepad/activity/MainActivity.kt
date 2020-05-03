@@ -1,4 +1,4 @@
-package com.game.gamepad
+package com.game.gamepad.activity
 
 import android.Manifest
 import android.animation.Animator
@@ -18,18 +18,20 @@ import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
-import android.widget.ArrayAdapter
-import android.widget.RelativeLayout
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AlertDialog
+import com.game.gamepad.R
 import com.game.gamepad.bluetooth.BlueToothTool
 import com.game.gamepad.utils.EasyRequest
 import com.game.gamepad.utils.ToastUtil
-import com.game.gamepad.widget.ConfigFactory
+import com.game.gamepad.config.ConfigFactory
 import com.game.gamepad.widget.GameButton
+import com.google.android.material.snackbar.Snackbar
 import com.smarx.notchlib.NotchScreenManager
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -37,7 +39,8 @@ import java.util.concurrent.TimeUnit
 //todo
 // 1.制作摇杆控件
 // 2.美化菜单界面
-class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothListener {
+class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothListener,
+    ChooseConfigDialog.ChooseConfigDialogListener, SaveConfigDialog.SaveConfigDialogListener {
     private val tag = "MainActivity"
     //记录连续按两次退出
     private var lastTime: Long = 0L
@@ -53,14 +56,15 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
     private val deviceNameList = ArrayList<String>()
     //蓝牙列表适配器
     private val deviceAdapter by lazy {
-        ArrayAdapter<String>(this, R.layout.simple_spinner_item, deviceNameList)
+        ArrayAdapter<String>(this,
+            R.layout.simple_spinner_item, deviceNameList)
     }
     //线程等待队列
     private val workQueue = LinkedBlockingDeque<Runnable>(10)
     //线程池
     private val threadPool = ThreadPoolExecutor(
+        2,
         4,
-        10,
         5000,
         TimeUnit.MILLISECONDS,
         workQueue
@@ -69,19 +73,20 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
     private val vibrator: Vibrator by lazy {
         getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
     }
+    private val debug=true
     //刷新设备列表
-    private val FRESHDEVEICEADAPTER = 1
-    private val handler = object : Handler() {
-        override fun handleMessage(msg: Message) {
-            when (msg.what) {
-                FRESHDEVEICEADAPTER -> {
-                    //deviceSpinner.adapter = deviceAdapter
-                    deviceAdapter.notifyDataSetChanged()
-                }
-            }
-            super.handleMessage(msg)
-        }
-    }
+//    private val FRESHDEVEICEADAPTER = 1
+//    private val handler = object : Handler() {
+//        override fun handleMessage(msg: Message) {
+//            when (msg.what) {
+//                FRESHDEVEICEADAPTER -> {
+//                    //deviceSpinner.adapter = deviceAdapter
+//                    deviceAdapter.notifyDataSetChanged()
+//                }
+//            }
+//            super.handleMessage(msg)
+//        }
+//    }
     private val removeListener = object : GameButton.RemoveListener {
         override fun remove(button: GameButton) {
             //home.removeView(button.getLayou())
@@ -99,10 +104,6 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
                                 loadDevice()
                             }.run()
                         }
-                        BluetoothAdapter.STATE_TURNING_OFF -> {
-                            //BlueToothTool.disConnect()
-                            Toast.makeText(this@MainActivity, "蓝牙关闭", Toast.LENGTH_SHORT).show()
-                        }
                     }
                 }
                 BluetoothDevice.ACTION_FOUND -> {
@@ -111,9 +112,12 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
                     if (!deviceList.contains(device)) {
                         deviceList.add(device)
                         deviceNameList.add(device.name)
-                        val msg = Message.obtain()
-                        msg.what = FRESHDEVEICEADAPTER
-                        handler.sendMessage(msg)
+                        GlobalScope.launch(Dispatchers.Main) {
+                            deviceAdapter.notifyDataSetChanged()
+                        }
+//                        val msg = Message.obtain()
+//                        msg.what = FRESHDEVEICEADAPTER
+//                        handler.sendMessage(msg)
                     }
                 }
             }
@@ -135,7 +139,8 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
     }
 
     override fun onDestroy() {
-        BlueToothTool.disConnect()
+        //销毁时不需要在返回消息
+        BlueToothTool.disConnect(false)
         unregisterBroadcast()
         super.onDestroy()
     }
@@ -147,7 +152,6 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
         filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED) //动作状态发生了变化
         registerReceiver(bluetoothStateChangedReceive, filter)
     }
-
 
     private fun unregisterBroadcast() {
         unregisterReceiver(bluetoothStateChangedReceive)
@@ -182,16 +186,17 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
     }
 
     private fun init() {
+        //用于保存配置
+        ConfigFactory.init(this)
+        if (!debug){
 //        isMain("init")
         BlueToothTool.setListener(this)
         //初始化蓝牙
         BlueToothTool.init()
         //初始化toast工具
         ToastUtil.init(this)
-
-        //用于保存配置
-        ConfigFactory.init(this)
         loadDevice()
+        }
 //        if (BlueToothTool.isEnable()) {
 //
 //            val devices = BlueToothTool.getDevices()
@@ -203,16 +208,21 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
         deviceSpinner.adapter = deviceAdapter
         deviceAdapter.notifyDataSetChanged()
 
-        chooseConfig.findViewById<TextView>(R.id.text).text = "选择配置"
-        saveConfig.findViewById<TextView>(R.id.text).text = "保存配置"
-        modifyConfig.findViewById<TextView>(R.id.text).text = "修改配置"
-        addConfig.findViewById<TextView>(R.id.text).text = "添加配置"
+        chooseConfig.findViewById<TextView>(R.id.buttonText).text = "选择配置"
+        saveConfig.findViewById<TextView>(R.id.buttonText).text = "保存配置"
+        modifyConfig.findViewById<TextView>(R.id.buttonText).text = "修改配置"
+        addConfig.findViewById<TextView>(R.id.buttonText).text = "添加配置"
+        deleteConfig.findViewById<TextView>(R.id.buttonText).text = "删除配置"
 
         //连接和断开连接
         connectDevice.setOnClickListener(this)
         disconnectDevice.setOnClickListener(this)
         //添加按钮
         addButton.setOnClickListener(this)
+        //添加配置
+        addConfig.setOnClickListener(this)
+        //删除配置
+        deleteConfig.setOnClickListener(this)
         //选择配置
         chooseConfig.setOnClickListener(this)
         //保存配置
@@ -238,9 +248,13 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
             deviceList.add(d)
             deviceNameList.add(d.name)
         }
-        val msg = Message.obtain()
-        msg.what = FRESHDEVEICEADAPTER
-        handler.sendMessage(msg)
+        GlobalScope.launch(Dispatchers.Main) {
+            deviceAdapter.notifyDataSetChanged()
+        }
+
+//        val msg = Message.obtain()
+//        msg.what = FRESHDEVEICEADAPTER
+//        handler.sendMessage(msg)
     }
 
     private fun isMain(msg:String){
@@ -251,31 +265,48 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
     }
 
     private fun createButton() {
-        threadPool.execute {
+        //threadPool.execute {
             //isMain("createButton")
             val key = keyValue.selectedItem.toString()
-            if (key == "")return@execute
+            if (key == "")return
             var xValue = 500f
             var yValue = 500f
             var radiusValue = 100
+            var infoValue = "按钮"
+            var typeValue = 0
             try {
                 val xText = x.text.toString()
                 val yText = y.text.toString()
                 val rText = radius.text.toString()
+                val typeText = type.text.toString()
+                val tText = buttonInfo.text.toString()
+
                 if (xText != "")
                     xValue = xText.toFloat()
                 if (yText != "")
                     yValue = yText.toFloat()
                 if (rText != "")
                     radiusValue = rText.toInt()
+                if (tText != "")
+                    infoValue = tText
+                if (typeText!="")
+                    typeValue = typeText.toInt()
             } catch (e: Exception) {
+                e.printStackTrace()
                 Toast.makeText(this, "参数有误", Toast.LENGTH_SHORT).show()
-                return@execute
+                return
             }
             val gameButton =
-                GameButton(home.context, home, removeListener, key, xValue, yValue, radiusValue)
+                GameButton(home.context, home, removeListener, typeValue,key,infoValue, xValue, yValue, radiusValue)
             gameButtonList.add(gameButton)
+        //}
+    }
+
+    private fun clearButton(){
+        for (index in gameButtonList.indices) {
+            gameButtonList[index].destroy(false)
         }
+        gameButtonList.clear()
     }
 
     private fun openSetting() {
@@ -439,6 +470,17 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
             back -> {
                 closeSetting()
             }
+            //添加新配置
+            addConfig->{
+                threadPool.execute{
+                    closeSetting()
+                    clearButton()
+                }
+            }
+            //删除配置
+            deleteConfig->{
+                DeleteConfigDialog(this).show()
+            }
             //对按钮进行操作
             modifyConfig -> {
                 //关闭设置界面
@@ -451,45 +493,47 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
                     }
                 }
             }
-            //加载设置
+            //选择配置
             chooseConfig -> {
-                threadPool.execute {
-                    closeSetting()
-                    for (index in gameButtonList.indices) {
-                        gameButtonList[index].destroy(false)
-                    }
-                    gameButtonList.clear()
-                    val list = ConfigFactory.loadConfig(removeListener, home)
-                    for (gameButton in list) {
-                        gameButtonList.add(gameButton)
-                    }
-                }
+                //AlertDialog.Builder(this).setTitle("sadsad").setMessage("dsadas").show()
+                ChooseConfigDialog(this).setListener(this).show()
+//                threadPool.execute {
+//                    closeSetting()
+//                    for (index in gameButtonList.indices) {
+//                        gameButtonList[index].destroy(false)
+//                    }
+//                    gameButtonList.clear()
+//                    val list = ConfigFactory.loadConfig(removeListener, home)
+//                    for (gameButton in list) {
+//                        gameButtonList.add(gameButton)
+//                    }
+//                }
             }
             //保存设置
             saveConfig -> {
-                threadPool.execute {
-                    var json = ""
-                    for ((index, gameButton) in gameButtonList.withIndex()) {
-                        json += gameButton.getBean()
-                        if (index != gameButtonList.size - 1)
-                            json += ","
-                    }
-                    ConfigFactory.save(
-                        json =
-                        "{\"name\":\"default\",\"desc\":\"nothing\",\"buttons\":[$json]}"
-                    )
-                }
+                SaveConfigDialog(this).setListener(this).show()
+//                threadPool.execute {
+//                    var json = ""
+//                    for ((index, gameButton) in gameButtonList.withIndex()) {
+//                        json += gameButton.getBean()
+//                        if (index != gameButtonList.size - 1)
+//                            json += ","
+//                    }
+//                    ConfigFactory.save(
+//                        json =
+//                        "{\"name\":\"default\",\"desc\":\"nothing\",\"buttons\":[$json]}"
+//                    )
+//                }
             }
             //连接设备
             connectDevice -> {
                 val index = deviceSpinner.selectedItemPosition
                 if (index == -1) return
-                BlueToothTool.preConnect(index)
-                BlueToothTool.connect()
+                BlueToothTool.connect(index)
             }
             //断开连接
             disconnectDevice -> {
-                BlueToothTool.disConnect()
+                BlueToothTool.disConnect(true)
             }
             //刷新设备
             reFresh -> {
@@ -497,7 +541,6 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
             }
         }
     }
-
     override fun onBackPressed() {
         val currentTime = System.currentTimeMillis()
         if (currentTime - lastTime <= 1500) {//1s
@@ -552,39 +595,64 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothTool.BluetoothLi
         }
     }
 
-    override fun connected(connected: Boolean) {
+    /**
+     * @param state 只有当connected = false 才有意义
+     * 0 连接失败
+     * 1 断开连接
+     */
+    override fun connected(connected: Boolean,state:Int) {
         runOnUiThread {
             if (connected) {
+                //下面这两个一个是设置页面的连接状态一个是主页面的连接状态
+                connectState.isActivated = true
+                connectionState.isActivated = true
+                Snackbar.make(home,"\t连接成功",Snackbar.LENGTH_SHORT).show()
+                //Toast.makeText(this, "连接成功", Toast.LENGTH_SHORT).show()
+                connectDevice.isEnabled = false
+                disconnectDevice.isEnabled = true
+                //开启蓝牙活跃
+//                threadPool.execute {
+                    BlueToothTool.positive()
+//                }
+            } else {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     vibrator.vibrate(VibrationEffect.createOneShot(300,1))
                 }
                 else{
                     vibrator.vibrate(300)
                 }
-                //下面这两个一个是设置页面的连接状态一个是主页面的连接状态
-                connectState.isActivated = true
-                connectionState.isActivated = true
-                Toast.makeText(this, "连接成功", Toast.LENGTH_SHORT).show()
-                connectDevice.isEnabled = false
-                disconnectDevice.isEnabled = true
-                //开启蓝牙活跃
-                threadPool.execute {
-                    BlueToothTool.positive()
-                }
-            } else {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    vibrator.vibrate(VibrationEffect.createOneShot(200,2))
-                }
-                else{
-                    vibrator.vibrate(longArrayOf(0L,200L,0L,0L),1)
-                }
                 connectState.isActivated = false
                 connectionState.isActivated = false
-                Toast.makeText(this, "连接失败", Toast.LENGTH_SHORT).show()
+                Snackbar.make(home,"\t连接失败",Snackbar.LENGTH_SHORT).show()
+                //Toast.makeText(this, "连接失败", Toast.LENGTH_SHORT).show()
                 connectDevice.isEnabled = true
                 disconnectDevice.isEnabled = false
             }
         }
+    }
+
+    override fun onChooseDialogOver(changed: Boolean, name: String) {
+        if (changed){
+            threadPool.execute {
+                //清除按钮，载入新配置
+                closeSetting()
+                clearButton()
+                val list = ConfigFactory.loadConfig(removeListener, home,name)
+                for (gameButton in list) {
+                    gameButtonList.add(gameButton)
+                }
+            }
+        }
+    }
+
+    override fun onSaveDialogOver(name: String) {
+        var json = ""
+        for ((index, gameButton) in gameButtonList.withIndex()) {
+            json += gameButton.getBean()
+            if (index != gameButtonList.size - 1)
+                json += ","
+        }
+        ConfigFactory.save(name, "{\"desc\":\"nothing\",\"buttons\":[$json]}")
     }
 }
 

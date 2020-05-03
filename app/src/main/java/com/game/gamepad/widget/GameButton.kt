@@ -1,7 +1,6 @@
 package com.game.gamepad.widget
 
 import android.content.Context
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -10,31 +9,38 @@ import android.widget.Button
 import android.widget.LinearLayout
 import com.game.gamepad.R
 import com.game.gamepad.bluetooth.BlueToothTool
-import com.game.gamepad.utils.ToastUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-
-//import io.javac.ManyBlue.ManyBlue
-
 
 class GameButton(
     context: Context,
     private val viewGroup: ViewGroup,
     listener: RemoveListener,
+    type :Int = 0,
     key: String = "",
+    text: String = "",
     x: Float,
     y: Float,
     private var radius: Int
 ) : View.OnClickListener, View.OnTouchListener {
+
+    companion object {
+        val RING = 0
+        val SQUARE = 1
+    }
+
     private val TAG = "GameButton"
-    private var key = ""
+    private var key = key
+    private var text = text
+    private var type = type
     private var MOVESTATE = false//移动
     private var listener: RemoveListener
 
     //这里的attachtoroot是真的坑，直接添加到根视图下了
     private var layout: LinearLayout = LayoutInflater.from(context).inflate(
-        R.layout.game_button_layout_ring,
+        if(type == RING) R.layout.game_button_layout_ring
+        else R.layout.game_button_layout_square,
         viewGroup,
         false
     ) as LinearLayout
@@ -49,13 +55,12 @@ class GameButton(
             viewGroup.addView(layout)
             button = layout.findViewById(R.id.btn)
             close = layout.findViewById(R.id.close)
-            setText(key)
+            setText(text)
             //button.setOnClickListener(this)
             button.layoutParams.apply {
                 height = radius * 2
                 width = radius * 2
             }
-            button.performClick()
             close.setOnClickListener(this@GameButton)
             button.setOnTouchListener(this@GameButton)
         }
@@ -83,9 +88,8 @@ class GameButton(
             listener.remove(this)
     }
 
-    fun setText(text: String) {
-        key = text
-        button.text = key
+    private fun setText(text: String) {
+        button.text = text
     }
 
     override fun onClick(v: View?) {
@@ -101,8 +105,8 @@ class GameButton(
 
         if (event == null || v == null) return false
         if (MOVESTATE) {
-            this.layout.x = event.rawX - button.width / 2 + close.width
-            this.layout.y = event.rawY - button.height / 2
+            this.layout.x = event.rawX - layout.width/2
+            this.layout.y = event.rawY - layout.height / 2
             return false
         }
         if (v.id == R.id.btn) {
@@ -139,7 +143,7 @@ class GameButton(
     //返回这个按钮的属性，便于保存到本地，再恢复，假装序列化
     fun getBean(): String {
         return """
-            {"height":${button.height},"key":"$key","width":${button.width},"x":${layout.x},"y":${layout.y},"r":${radius}}
+            {"height":${button.height},"key":"$key","text":"$text","type":$type,"width":${button.width},"x":${layout.x},"y":${layout.y},"r":${radius}}
         """.trimIndent()
     }
 
