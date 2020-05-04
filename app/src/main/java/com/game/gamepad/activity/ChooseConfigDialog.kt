@@ -16,7 +16,6 @@ class ChooseConfigDialog(context: Context, style:Int =0) : Dialog(context,style)
     //上一次加载的配置
     private var selectedName = ConfigFactory.getDefault()
     private lateinit var adapter: ConfigListAdapter
-
     private lateinit var listenerChooseConfig: ChooseConfigDialogListener
 
     fun setListener(listenerChooseConfig: ChooseConfigDialogListener):ChooseConfigDialog{
@@ -43,6 +42,7 @@ class ChooseConfigDialog(context: Context, style:Int =0) : Dialog(context,style)
             array.add(ConfigItem(s, selectedName == s))
         }
         adapter = ConfigListAdapter(context,array,R.layout.choose_config_item,false)
+        //adapter.addOnItemSelectedListener(this)
         chooseConfigList.adapter = adapter
         adapter.notifyDataSetChanged()
         chooseConfigCancel.setOnClickListener(this)
@@ -64,11 +64,11 @@ class ChooseConfigDialog(context: Context, style:Int =0) : Dialog(context,style)
         dismiss()
     }
 
-    interface ChooseConfigDialogListener{
+    interface ChooseConfigDialogListener {
         /**
          * @param changed 配置文件是否改变
          * @param name 新选中的配置文件名
          */
-        fun onChooseDialogOver(changed:Boolean, name:String)
+        fun onChooseDialogOver(changed: Boolean, name: String)
     }
 }

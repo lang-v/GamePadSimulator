@@ -124,34 +124,6 @@
 
         </RelativeLayout>
 
-<!--        <LinearLayout-->
-<!--            android:id="@+id/infoLayout"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="match_parent"-->
-<!--            android:gravity="center"-->
-<!--            android:layout_below="@+id/deviceLayout"-->
-<!--            android:layout_toStartOf="@id/buttonLayout"-->
-<!--            android:layout_toEndOf="@id/configLayout"-->
-<!--            android:orientation="vertical">-->
-
-<!--            <TextView-->
-<!--                android:id="@+id/info"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_marginTop="20dp"-->
-<!--                android:layout_marginBottom="20dp"-->
-<!--                android:padding="20dp"-->
-<!--                android:textAlignment="center" />-->
-
-<!--            <Button-->
-<!--                android:id="@+id/back"-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:text="返回" />-->
-
-<!--        </LinearLayout>-->
-
-
         <com.example.elasticviewlibrary.ElasticView
             android:id="@+id/buttonLayout"
             android:layout_width="150dp"
@@ -207,17 +179,17 @@
                         android:hint="半径:100" />
 
                     <EditText
-                        android:id="@+id/type"
-                        android:layout_width="150dp"
-                        android:layout_height="wrap_content"
-                        android:digits="1234567890"
-                        android:hint="type:0" />
-
-                    <EditText
                         android:id="@+id/buttonInfo"
                         android:layout_width="150dp"
                         android:layout_height="wrap_content"
                         android:hint="buttonText:按钮" />
+
+                    <androidx.appcompat.widget.AppCompatSpinner
+                        android:id="@+id/buttonType"
+                        android:layout_width="150dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:entries="@array/button_type_array" />
 
                     <Button
                         android:id="@+id/addButton"

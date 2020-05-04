@@ -8,7 +8,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
 import com.game.gamepad.R
-import com.game.gamepad.bluetooth.BlueToothTool
+import com.game.gamepad.utils.BlueToothUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -130,8 +130,8 @@ class GameButton(
     @Synchronized
     private fun sendMsg(state: Boolean) {
         Thread {
-            if (BlueToothTool.isConnected())
-                BlueToothTool.sendMsg(
+            if (BlueToothUtil.isConnected())
+                BlueToothUtil.sendMsg(
                     "$key:${
                     if (state) "true"
                     else "false"

@@ -115,3 +115,18 @@
 # 使用Gson时需要配置Gson的解析对象及变量都不混淆。不然Gson会找不到变量。
 #实体类
 -keep public class com.game.gamepad.config.**{*;}
+
+###去除log和报错信息打印
+-assumenosideeffects class android.util.Log {
+    public static *** d(...);
+    public static *** e(...);
+    public static *** i(...);
+    public static *** v(...);
+    public static *** println(...);
+    public static *** w(...);
+    public static *** wtf(...);
+}
+
+-assumenosideeffects class java.lang.Exception{
+    public *** printStackTrace(...);
+}

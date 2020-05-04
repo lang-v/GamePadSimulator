@@ -1,6 +1,8 @@
 package com.game.gamepad.config
 
-
+/**
+ * GameButton 的数据类 存储所有button的信息
+ */
 data class ConfigBean(
     val buttons: List<Button>,
     val desc: String

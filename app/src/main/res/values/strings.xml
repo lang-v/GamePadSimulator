@@ -7,6 +7,14 @@
     <string name="save_config">保存配置</string>
     <string name="tips">提示：数值只与屏幕像素有关</string>
     <string name="addButton">生成按钮</string>
+
+    <string-array name="button_type_array">
+<!--        圆形按钮-->
+        <item>圆形</item>
+<!--        方形按钮-->
+        <item>方块</item>
+    </string-array>
+
     <string-array name="key_array">
         <item>backspace</item>
         <item>ctrl</item>

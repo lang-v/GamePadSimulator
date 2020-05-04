@@ -4,9 +4,13 @@ import android.app.Dialog
 import android.content.Context
 import android.graphics.Point
 import android.os.Bundle
+import android.view.Gravity
+import android.view.KeyEvent
 import android.view.View
+import android.view.Window
 import com.game.gamepad.R
 import kotlinx.android.synthetic.main.save_config_layout.*
+import java.security.Key
 
 class SaveConfigDialog(context: Context): Dialog(context), View.OnClickListener {
     private lateinit var listener: SaveConfigDialogListener
@@ -25,7 +29,14 @@ class SaveConfigDialog(context: Context): Dialog(context), View.OnClickListener 
         d.getSize(size)
         p.width = (size.x * 0.8).toInt()//是dialog的宽度为app界面的80%
         window!!.attributes = p
-
+        saveConfigEditName.setOnKeyListener{_,keyCode,_->
+            var state = false
+            if (keyCode == KeyEvent.KEYCODE_ENTER){
+                saveConfigConfirm.callOnClick()
+                state = true
+            }
+            state
+        }
         saveConfigCancel.setOnClickListener(this)
         saveConfigConfirm.setOnClickListener(this)
     }

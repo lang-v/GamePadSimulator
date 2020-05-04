@@ -1,11 +1,10 @@
-package com.game.gamepad.bluetooth
+package com.game.gamepad.utils
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.util.Log
 import com.game.gamepad.queue.MsgQueue
-import com.game.gamepad.utils.ToastUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -16,60 +15,86 @@ import java.io.OutputStream
 import java.util.*
 
 
-object BlueToothTool {
+object BlueToothUtil {
     private const val TAG = "BlueTooth"
+
+    const val DISABLE = 1
+    const val OFF = 2
+    const val CONNECTED = 3
+    const val DISCONNECTED = 4
+
     private var sendMsgThreadRunning = false//记录发送线程的运行状态
-    private val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+    private val bluetoothAdapter:BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
     private var bluetoothSocket: BluetoothSocket? = null
     //连接的设备位置
     private var connectDeviceIndex: Int = 0
     //返回连接信息，是否与pc对接成功
-    private lateinit var blueToothtListener: BluetoothListener
+    private lateinit var blueToothListener: BluetoothListener
     private var outputStream: OutputStream? = null
     private var inputStream: InputStream? = null
     private var connectThread: ConnectThread? = null
     //和pc端一致
     private val uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
     private val msgQueue= MsgQueue()
-
     //用于发送消息的线程
-    private var msgThread :MsgThread? = null
+    private var msgThread : MsgThread? = null
 
 
     fun setListener(listener: BluetoothListener) {
-        blueToothtListener = listener
+        blueToothListener = listener
     }
 
     //开启蓝牙
     private fun enableBT() {
-        if (!bluetoothAdapter.isEnabled)
-            bluetoothAdapter.enable()
+        if (bluetoothAdapter == null)return
+        bluetoothAdapter.enable()
     }
 
-    //因为是手机连接电脑所以手机不需要开启蓝牙可见,省电
     fun search() {
-        bluetoothAdapter.startDiscovery()
+        if (getState() == DISCONNECTED)
+            bluetoothAdapter!!.startDiscovery()
     }
 
     fun init() {
+        if (getState() != DISCONNECTED){
+            return
+        }
         enableBT()
-        if (isEnable()) {
+        if (getState() == DISCONNECTED) {
             search()
             //list.addAll(getDevices())
         }
     }
 
-    fun isEnable(): Boolean {
-        return bluetoothAdapter.state == BluetoothAdapter.STATE_ON
+    fun getState(): Int {
+        return when {
+            bluetoothAdapter == null -> {
+                SnackbarUtil.show("此设备不支持蓝牙")
+                BluetoothAdapter.STATE_ON
+                DISABLE
+            }
+            bluetoothAdapter.state != BluetoothAdapter.STATE_ON ->{
+                SnackbarUtil.show("蓝牙未开启")
+                OFF
+            }
+            bluetoothSocket == null -> DISCONNECTED
+            else -> CONNECTED
+        }
     }
 
     fun connect(index: Int) {
-        if (connectThread != null)return
+        if (index == -1||connectThread != null || bluetoothAdapter == null)return
         connectDeviceIndex = index
         bluetoothSocket =
-            bluetoothAdapter.bondedDevices.toList()[index].createRfcommSocketToServiceRecord(uuid)
+            bluetoothAdapter!!.bondedDevices.toList()[index].createRfcommSocketToServiceRecord(
+                uuid
+            )
         //开启连接线程
-        connectThread = ConnectThread(getDevices()[connectDeviceIndex], bluetoothSocket)
+        connectThread =
+            ConnectThread(
+                getDevices()[connectDeviceIndex],
+                bluetoothSocket
+            )
         connectThread!!.start()
     }
 
@@ -83,7 +108,7 @@ object BlueToothTool {
         } catch (e: Exception) {
             e.printStackTrace()
             Log.e("SL", "对接失败")
-            blueToothtListener.connected(false,0)
+            blueToothListener.connected(false,0)
         }
     }
 
@@ -94,7 +119,7 @@ object BlueToothTool {
 
     //获取已配对的设备
     fun getDevices(): List<BluetoothDevice> {
-        return bluetoothAdapter.bondedDevices.toList()
+        return bluetoothAdapter!!.bondedDevices.toList()
     }
 
     /**
@@ -104,7 +129,7 @@ object BlueToothTool {
     private var lastTime = 0L
     private var positiveRunning = false
     fun positive() {
-        if (positiveRunning)return
+        if (positiveRunning || getState() == OFF)return
         positiveRunning = true
         GlobalScope.launch {
             while (isConnected()) {
@@ -135,11 +160,11 @@ object BlueToothTool {
                     inputStream!!.read(byteArray, 0, byteArray.size)
                     val msg = byteArray.toString(Charsets.UTF_8).substring(0, 9)
                     Log.e("SL", "receiveMsg 对接 $msg ${msg == receiveCommand}")
-                    blueToothtListener.connected(msg == receiveCommand)
+                    blueToothListener.connected(msg == receiveCommand)
                 } catch (e: Exception) {
                     e.printStackTrace()
                     Log.e("SL", "receiveMsg 对接失败")
-                    blueToothtListener.connected(false,0)
+                    blueToothListener.connected(false,0)
                 }
             }
         }
@@ -148,7 +173,8 @@ object BlueToothTool {
     fun sendMsg(msg: String) {
         //入队
         msgQueue.enQueue(msg)
-        if (msgThread == null) msgThread = MsgThread()
+        if (msgThread == null) msgThread =
+            MsgThread()
         if (!msgThread!!.getRunning()) {
             msgThread!!.start()
         }
@@ -162,18 +188,18 @@ object BlueToothTool {
 //        if(msg != " _")Log.e("BTMSG",msg)
         lastTime = System.currentTimeMillis()
         if (bluetoothSocket == null || !bluetoothSocket!!.isConnected) {
-            ToastUtil.show("未连接")
+            SnackbarUtil.show("未连接")
             return
         }
         try {
-            if (outputStream==null)
+            if (outputStream ==null)
                 outputStream = bluetoothSocket!!.outputStream
             outputStream!!.write((msg+"_").toByteArray(Charsets.UTF_8))
             //outputStream!!.flush()
             //blueToothtListen.toast("消息发送成功")
         } catch (e: Exception) {
             e.printStackTrace()
-            ToastUtil.show("消息发送失败")
+            SnackbarUtil.show("消息发送失败")
             if (outputStream != null)
                 outputStream!!.close()
             outputStream = null
@@ -205,7 +231,7 @@ object BlueToothTool {
             }
         }
         if (needCallBack)
-            blueToothtListener.connected(false,1)
+            blueToothListener.connected(false,1)
     }
 
     interface BluetoothListener {
@@ -243,7 +269,7 @@ object BlueToothTool {
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    ToastUtil.show("消息发送失败")
+                    SnackbarUtil.show("消息发送失败")
                     if (outputStream != null)
                         outputStream!!.close()
                     outputStream = null
@@ -260,7 +286,8 @@ object BlueToothTool {
     ) : Thread() {
         private val mSocketType: String? = null
         override fun run() { // Always cancel discovery because it will slow down a connection
-            bluetoothAdapter.cancelDiscovery()
+            //开始连接，停止扫描
+            bluetoothAdapter!!.cancelDiscovery()
             // Make a connection to the BluetoothSocket
             try { // This is a blocking call and will only return on a
 // successful connection or an exception
@@ -289,7 +316,7 @@ object BlueToothTool {
                         )
                     }
                     Log.e("SL", "连接失败")
-                    blueToothtListener.connected(false,0)
+                    blueToothListener.connected(false,0)
                     return
                 }
             }

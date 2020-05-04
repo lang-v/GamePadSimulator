@@ -11,7 +11,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 29
         versionCode 1
-        versionName "1.0.5"
+        versionName "1.0.6"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -25,13 +25,12 @@ android {
     }
 
     buildTypes {
-        /**
-         * release {*
-         * minifyEnabled true
-         * proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-         * }
-         * 下面的代码是用来测试 release版本*/
-        release {
+         release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+         }
+         // 下面的代码是用来测试 release版本
+        /*release {
             minifyEnabled true
             //日志开关
             buildConfigField "boolean", "LOG_DEBUG", "false"
@@ -45,7 +44,7 @@ android {
         }
         debug {
             signingConfig signingConfigs.release
-        }
+        }*/
 
     }
     android.applicationVariants.all {

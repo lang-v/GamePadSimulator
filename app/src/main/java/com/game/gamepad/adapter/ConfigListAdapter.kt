@@ -17,6 +17,10 @@ class ConfigListAdapter(
     private val multiple: Boolean
 ) :
     ArrayAdapter<ConfigItem>(context, resources) {
+    private var itemSelectListener: OnItemSelectListener?=null
+    fun addOnItemSelectedListener(listener: OnItemSelectListener){
+        this.itemSelectListener = listener
+    }
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val item = itemList[position]
         val view = LayoutInflater.from(context).inflate(resources, parent, false)
@@ -27,6 +31,9 @@ class ConfigListAdapter(
         val radio = view.findViewById<RadioButton>(R.id.chooseConfigRadio)
         title.text = item.name
         radio.isChecked = item.selected
+        if (item.selected){
+            itemSelectListener?.onItemSelected(item.name)
+        }
         return view
     }
 
@@ -60,5 +67,9 @@ class ConfigListAdapter(
                 array.add(configItem)
         }
         return array
+    }
+
+    interface OnItemSelectListener{
+        fun onItemSelected(name:String)
     }
 }

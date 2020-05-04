@@ -4,9 +4,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import android.view.ViewGroup
-import com.game.gamepad.utils.ToastUtil
+import com.game.gamepad.utils.SnackbarUtil
 import com.game.gamepad.widget.GameButton
-import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import java.io.*
 
@@ -27,7 +26,7 @@ object ConfigFactory{
             configBean = gson.fromJson(String(json.toByteArray(),Charsets.UTF_8), ConfigBean::class.java)
         }catch (e:Exception){
             e.printStackTrace()
-            ToastUtil.show("载入配置失败")
+            SnackbarUtil.show("载入配置失败")
             return ArrayList()
         }
         val buttons = ArrayList<GameButton>()
@@ -73,7 +72,7 @@ object ConfigFactory{
             file.flush()
         }catch (e:Exception){
             e.printStackTrace()
-            ToastUtil.show("保存配置失败，请检查读写权限")
+            SnackbarUtil.show("保存配置失败，请检查读写权限")
         }finally {
             file?.close()
         }
@@ -123,7 +122,7 @@ object ConfigFactory{
             saveDefault(name)
         }catch (e:Exception){
             e.printStackTrace()
-            ToastUtil.show("读取配置失败，请检查读写权限")
+            SnackbarUtil.show("读取配置失败，请检查读写权限")
             json = ""
         }finally {
             fileReader?.close()
