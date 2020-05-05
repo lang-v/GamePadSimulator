@@ -18,4 +18,7 @@
 
 
 apk下载链接：[here](https://github.com/FrontmanwithWLJ/GamePadSimulator/blob/master/app/release/GamePadSimulator-v1.0.6.apk)
+
 pc端链接：[here](https://github.com/FrontmanwithWLJ/GamePadSimulatorPC)
+
+pc+android合集：[here](https://github.com/FrontmanwithWLJ/GamePadSimulator/blob/master/%E6%B8%B8%E6%88%8F%E6%A8%A1%E6%8B%9F%E5%99%A8.rar)
