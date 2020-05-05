@@ -56,25 +56,26 @@ object BlueToothUtil {
     }
 
     fun init() {
-        if (getState() != DISCONNECTED){
-            return
-        }
-        enableBT()
-        if (getState() == DISCONNECTED) {
-            search()
-            //list.addAll(getDevices())
+        when (getState()) {
+            DISABLE -> {
+                return
+            }
+            DISCONNECTED -> {
+                search()
+                return
+            }
+            OFF -> {
+                enableBT()
+            }
         }
     }
 
     fun getState(): Int {
         return when {
             bluetoothAdapter == null -> {
-                SnackbarUtil.show("此设备不支持蓝牙")
-                BluetoothAdapter.STATE_ON
                 DISABLE
             }
             bluetoothAdapter.state != BluetoothAdapter.STATE_ON ->{
-                SnackbarUtil.show("蓝牙未开启")
                 OFF
             }
             bluetoothSocket == null -> DISCONNECTED
@@ -82,8 +83,13 @@ object BlueToothUtil {
         }
     }
 
+    fun isDisableOrOff():Boolean{
+        val state = getState()
+        return state == DISABLE || state == OFF
+    }
+
     fun connect(index: Int) {
-        if (index == -1||connectThread != null || bluetoothAdapter == null)return
+        if (index == -1||connectThread != null || getState() != DISCONNECTED)return
         connectDeviceIndex = index
         bluetoothSocket =
             bluetoothAdapter!!.bondedDevices.toList()[index].createRfcommSocketToServiceRecord(

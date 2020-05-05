@@ -7,10 +7,7 @@ import android.animation.ValueAnimator
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.content.*
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.*
@@ -32,9 +29,11 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.util.*
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
 
 //todo
 // 1.制作摇杆控件
@@ -189,11 +188,14 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothUtil.BluetoothLi
     private fun init() {
         //用于保存配置
         ConfigFactory.init(this)
-        BlueToothUtil.setListener(this)
+        checkBlueToothState()
         //初始化蓝牙
         BlueToothUtil.init()
+        BlueToothUtil.setListener(this)
+
         //初始化toast工具
         SnackbarUtil.init(home)
+        //先加载一次已绑定设备
         loadDevice()
 
         deviceSpinner.adapter = deviceAdapter
@@ -230,6 +232,23 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothUtil.BluetoothLi
         //chooseConfig.callOnClick()
         openSetting()
         //closeSetting()
+    }
+
+    private fun checkBlueToothState() {
+        val state = BlueToothUtil.getState()
+        if (state == BlueToothUtil.DISABLE) {
+            AlertDialog.Builder(this)
+                .setTitle("提示")
+                .setMessage("此设备不支持蓝牙\n2秒后将退出程序")
+                .setCancelable(false)
+                .setPositiveButton("退出") { _, _ -> finish() }
+                .show()
+            Timer().schedule(object : TimerTask() {
+                override fun run() {
+                    finish()
+                }
+            }, 2000)
+        }
     }
 
     private fun loadDevice() {

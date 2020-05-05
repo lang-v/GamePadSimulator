@@ -133,8 +133,8 @@ class GameButton(
             if (BlueToothUtil.isConnected())
                 BlueToothUtil.sendMsg(
                     "$key:${
-                    if (state) "true"
-                    else "false"
+                    if (state) "t"
+                    else "f"
                     }"
                 )
         }.run()

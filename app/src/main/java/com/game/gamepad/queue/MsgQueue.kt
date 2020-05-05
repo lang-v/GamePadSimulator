@@ -1,6 +1,6 @@
 package com.game.gamepad.queue
 
-import android.util.Log
+import java.util.concurrent.locks.ReentrantLock
 
 /**
  * job -> string
@@ -23,8 +23,10 @@ class MsgQueue(private val listener: QueueChangeListener?=null) {
     }
     private val TAG = "MsgQueue"
     private var firstMsg = ""
+    private val lock = ReentrantLock()
 
     fun enQueue(msg:String){
+        while (lock.isLocked){}//阻塞
         synchronized(this) {
             firstMsg += (msg + "_")
         }
@@ -35,9 +37,9 @@ class MsgQueue(private val listener: QueueChangeListener?=null) {
 //        Log.e(TAG,"full frontindex=$frontIndex , reaarindex=$rearIndex")
         listener?.changed(DEQUEUE)
         val msg = firstMsg
-        synchronized(this) {
-            firstMsg = ""
-        }
+        lock.lock()
+        firstMsg = ""
+        lock.unlock()
         return msg
     }
 
