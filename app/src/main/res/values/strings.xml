@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">游戏手柄模拟器(Beta)</string>
+    <string name="app_name">游戏手柄模拟器</string>
     <string name="choose_config">选择配置</string>
     <string name="add_config">添加配置</string>
     <string name="add_button">添加按钮</string>

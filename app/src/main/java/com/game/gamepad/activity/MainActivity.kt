@@ -157,6 +157,11 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothUtil.BluetoothLi
         unregisterReceiver(bluetoothStateChangedReceive)
     }
 
+    /**
+     * 这一段本来是为ble准备的，但是一直都没有写ble的代码，所以也就不用了
+     * 经典蓝牙不需要定位权限就能获取
+     */
+    /*
     private fun requestPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (permissionManager.checkPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
@@ -184,7 +189,7 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothUtil.BluetoothLi
             init()
         }
     }
-
+    */
     private fun init() {
         //用于保存配置
         ConfigFactory.init(this)
@@ -520,49 +525,49 @@ class MainActivity : Activity(), View.OnClickListener, BlueToothUtil.BluetoothLi
         }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            1, 2 -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    init()
-                } else {
-                    Toast.makeText(this, "未授权,请手动授权", Toast.LENGTH_SHORT).show()
-                    AlertDialog.Builder(this)
-                        .setTitle("请求授权")
-                        .setMessage("是否手动授权")
-                        .setPositiveButton("是") { _, _ ->
-                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                            val uri = Uri.fromParts("package", packageName, null)
-                            intent.data = uri
-                            startActivity(intent)
-                        }
-                        .setNegativeButton("否") { _, _ -> finish() }
-                        .show()
-                }
-            }
-        }
-    }
+//    override fun onRequestPermissionsResult(
+//        requestCode: Int,
+//        permissions: Array<out String>,
+//        grantResults: IntArray
+//    ) {
+//        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+//        when (requestCode) {
+//            1, 2 -> {
+//                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//                    init()
+//                } else {
+//                    Toast.makeText(this, "未授权,请手动授权", Toast.LENGTH_SHORT).show()
+//                    AlertDialog.Builder(this)
+//                        .setTitle("请求授权")
+//                        .setMessage("是否手动授权")
+//                        .setPositiveButton("是") { _, _ ->
+//                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+//                            val uri = Uri.fromParts("package", packageName, null)
+//                            intent.data = uri
+//                            startActivity(intent)
+//                        }
+//                        .setNegativeButton("否") { _, _ -> finish() }
+//                        .show()
+//                }
+//            }
+//        }
+//    }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == RESULT_CANCELED) {
-            if (!permissionManager.checkPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                || !permissionManager.checkPermission(
-                    this,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            ) {
-                requestPermission()
-            } else {
-                finish()
-            }
-        }
-    }
+//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+//        super.onActivityResult(requestCode, resultCode, data)
+//        if (resultCode == RESULT_CANCELED) {
+//            if (!permissionManager.checkPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+//                || !permissionManager.checkPermission(
+//                    this,
+//                    Manifest.permission.ACCESS_COARSE_LOCATION
+//                )
+//            ) {
+//                requestPermission()
+//            } else {
+//                finish()
+//            }
+//        }
+//    }
 
     /**
      * @param state 只有当connected = false 才有意义
